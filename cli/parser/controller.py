@@ -30,7 +30,14 @@
 import os
 import sys
 import pprint
+import hashlib
 from pattern import *
+
+def tab(times):
+	tabContent = '\n'
+	for i in range(0, times):
+		tabContent += '\t'
+	return tabContent
 
 class Controller:
 
@@ -232,6 +239,62 @@ class Controller:
 				methodInfo['@']['@Action'] = methodInfo['Name']
 				annotationList.append(methodInfo['@'])
 		return annotationList
+	
+	def renderString(self, template, data):
+		content = ''
+		start = 0
+		end = -1
+		for match in re.finditer(r"\{\{[a-zA-Z0-9_\s]+\}\}", template):
+			end = match.start()
+			if start < end:
+				content += template[start:end]
+			start = end + 1
+			var_block = template[match.start():match.end()]
+			var = re.split("\s+", var_block)[1]
+			if var in data:
+				content += data[var]
+			start = match.end()
+		content += template[start:]
+		content = content.replace('"', '\"')
+		return content
+	
+	def generateControllerActionMapping(self):
+		controllesH = os.path.abspath(self.Output + '/../main/controllers.h')
+		controllers = open(controllesH, 'w')
+		controllersTemplate = """
+// AUTO GENERATED
+#include <map>
+#include <vector>
+#include <functional>
+#include <app/controller.h>
+namespace app {
+	ListController getControllers() {
+		ListController controllers = new ListController;{{ controllers }}
+		return controllers;
+	}
+}"""
+		controllerList = ''
+		print 'Scan controller - action \n\n'
+		print self.Input
+		hashMd5 = hashlib.md5()
+		for className in self.annotationInfo:
+			controllerList += tab(2) + 'controllers["' + className +'"] = (new Controller)' + tab(9) +'->setName("' + className + '")'
+			for methodInfo in self.annotationInfo[className]['Method']:
+				actionName = methodInfo['Name']
+				hashMd5.update(className + '-' + actionName)
+				hashAction = hashMd5.hexdigest()
+				controllerList += tab(9) + '->addAction(' + tab(10) +'(new Action)' + tab(11) + '->setName("' + actionName +'")'
+				controllerList += tab(11) + '->setHash("' + hashAction + '")'
+				if 
+				#print hashAction
+				controllerList += tab(9) + ')'
+			controllerList += ';';
+		controllersContent = self.renderString(controllersTemplate, {
+			'controllers' : controllerList
+		})
+		controllers.write(controllersContent)
+		print 'Write done'
+		exit()
 
 	def generateNginxConfig(self):
 		annotationList = self.mergeAnnotation()
@@ -252,3 +315,4 @@ class Controller:
 			if controller.endswith('.h'):
 				self.compileFile(controller)
 		self.generateNginxConfig()
+		self.generateControllerActionMapping()
