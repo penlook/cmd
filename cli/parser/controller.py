@@ -143,9 +143,24 @@ class Controller:
 									break
 								indexR = indexR - 1
 							currentMethod = method_without_am[indexR : indexL]
+							indexL = method_without_am.index('(');
+							indexR = method_without_am.index(')');
+							arguments = method_without_am[indexL + 1 : indexR]
+							argumentPairs = arguments.split(',')
+							argumentList = []
+							if len(argumentPairs) > 0:
+								for argumentPair in argumentPairs:
+									variableCom  = argumentPair.split(' ')
+									variableName = variableCom[-1].strip()
+									variableType = ''
+									variableType = variableType.join(variableCom[1:len(variableCom) - 1]).strip()
+									if (len(variableType) > 0) and (len(variableName) > 0):
+										argumentList.append([variableType, variableName])
+							self.annotationStack['@Argument'] = argumentList
 							self.annotationInfo[self.currentClass]['Method'].append(
 								{'Name': currentMethod, '@': self.annotationStack }
 							)
+							#print self.annotationInfo
 						self.annotationStack = {}
 						continue
 					if pattern.isProperty():
@@ -274,19 +289,18 @@ namespace app {
 	}
 }"""
 		controllerList = ''
-		print 'Scan controller - action \n\n'
-		print self.Input
 		hashMd5 = hashlib.md5()
 		for className in self.annotationInfo:
 			controllerList += tab(2) + 'controllers["' + className +'"] = (new Controller)' + tab(9) +'->setName("' + className + '")'
 			for methodInfo in self.annotationInfo[className]['Method']:
-				actionName = methodInfo['Name']
+				actionName = methodInfo['Name'].strip()
 				hashMd5.update(className + '-' + actionName)
 				hashAction = hashMd5.hexdigest()
 				controllerList += tab(9) + '->addAction(' + tab(10) +'(new Action)' + tab(11) + '->setName("' + actionName +'")'
 				controllerList += tab(11) + '->setHash("' + hashAction + '")'
-				if 
-				#print hashAction
+				if len(methodInfo['@']['@Argument']) > 0:
+					for argumentPair in methodInfo['@']['@Argument']:
+						controllerList += tab(11) + '->addArgument("' + argumentPair[0] + '","' + argumentPair[1] + '")'
 				controllerList += tab(9) + ')'
 			controllerList += ';';
 		controllersContent = self.renderString(controllersTemplate, {
@@ -298,7 +312,6 @@ namespace app {
 
 	def generateNginxConfig(self):
 		annotationList = self.mergeAnnotation()
-		pprint.pprint(annotationList)
 		location = ""
 		configContent = """
 		location /test {
