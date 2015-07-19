@@ -44,7 +44,7 @@ setup(
 		]
 	},
 	entry_points = {
-		'console_scripts': ['pen=cmd.pen:main'],
+		'console_scripts': ['pen=pen:main'],
 	},
 	zip_safe = False
 )

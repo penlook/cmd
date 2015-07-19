@@ -46,7 +46,7 @@ class Build(argparse.Action):
 		print 'Template - Starting complie ...'
 		view = View()
 		view.setInput(self.root + "/view") \
-			.setOutput(self.root + "/build/app/view") \
+			.setOutput(self.root + "/build/app/resource/view") \
 			.setMode(View.PRODUCTION) \
 			.compile()
 		print 'Template - Done.'
@@ -66,6 +66,6 @@ class Build(argparse.Action):
 
 		self.prepare()
 		self.parse()
-		self.config()
+		#self.config()
 		self.build()
 		

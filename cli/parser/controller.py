@@ -32,6 +32,7 @@ import sys
 import pprint
 import hashlib
 from pattern import *
+import pprint
 
 def tab(times):
 	tabContent = '\n'
@@ -49,7 +50,10 @@ class Controller:
 			'@Type': 'HTML'
 		}
 
-	def initHeaderParser(self):
+	def initControllerParser(self):
+		self.commentFlag = False
+		self.bracketFlag = 0
+		self.methodStack = {}
 		self.annotationStack = {}
 		self.lineStack = []
 		self.currentClass = None
@@ -83,15 +87,16 @@ class Controller:
 	def parseSourceFile(self, sourcePath):
 		pass
 
-	def parseHeaderFile(self, headerPath):
-		self.initHeaderParser()
+	def parseController(self, cppPath):
+		print "PARSE : ", cppPath
+		self.initControllerParser()
 		annotationStorage = {}
 		self.annotationStack = {}
 		# Pattern recognition
 		pattern = Pattern()
 		pattern.setContext(self)
 		# Compile file
-		with open(headerPath, "r") as lines :
+		with open(cppPath, "r") as lines :
 			for line in lines:
 				line = line.strip()
 				if len(line) > 0:
@@ -110,13 +115,13 @@ class Controller:
 							self.isAction = True
 						self.annotationStack[annotationName] = annotationValue
 						continue
-					if pattern.isMethod():
+					if pattern.isMethod() and self.bracketFlag == 0:
 						# Default
 						method_without_am = self.line
 						action_type = ''
 						am = False
 						if self.isAction:
-							 action_type = 'void'
+							action_type = 'void'
 						if pattern.isPublic():
 							method_without_am = self.line.split('public')[1]
 							method_without_am = action_type + method_without_am
@@ -136,15 +141,20 @@ class Controller:
 							method_without_am = action_type + method_without_am
 							self.stackNonAccessModifier.append(method_without_am)
 						if len(self.annotationStack) > 0:
-							indexL = method_without_am.index('(');
+							indexL = method_without_am.index('(')
 							indexR = indexL
 							while indexR > 0:
 								if method_without_am[indexR] == ' ':
 									break
 								indexR = indexR - 1
 							currentMethod = method_without_am[indexR : indexL]
-							indexL = method_without_am.index('(');
-							indexR = method_without_am.index(')');
+							self.currentMethod = currentMethod
+							self.methodStack[self.currentMethod] = {}
+							self.methodStack[self.currentMethod]["Header"] = method_without_am[0 : indexR] + " " + className + "::" + currentMethod.strip()
+							self.methodStack[self.currentMethod]["Block"] = ''
+							indexL = method_without_am.index('(')
+							indexR = method_without_am.index(')')
+							self.methodStack[self.currentMethod]["Header"] += method_without_am[indexL : indexR + 1]
 							arguments = method_without_am[indexL + 1 : indexR]
 							argumentPairs = arguments.split(',')
 							argumentList = []
@@ -163,22 +173,24 @@ class Controller:
 							#print self.annotationInfo
 						self.annotationStack = {}
 						continue
-					if pattern.isProperty():
+					if pattern.isProperty() and self.bracketFlag == 0:
 						am = False
+						property_without_am = ' '
 						if pattern.isPublic():
 							am = True
 							property_without_am = self.line.split('public')[1]
-							self.stackPublic.append(property_without_am)
+							self.stackPublic.append(property_without_am.strip())
 						if pattern.isPrivate():
 							am = True
 							property_without_am = self.line.split('private')[1]
-							self.stackPrivate.append(property_without_am)
+							self.stackPrivate.append(property_without_am.strip())
 						if pattern.isProtected():
 							am = True
 							property_without_am = self.line.split('protected')[1]
-							self.stackProtected.append(property_without_am)
+							self.stackProtected.append(property_without_am.strip())
 						if am is False:
-							self.stackNonAccessModifier.append(property_without_am)
+							print property_without_am
+							self.stackNonAccessModifier.append(property_without_am.strip())
 						continue
 					if pattern.isClass():
 						class_without_bracket = self.line
@@ -189,9 +201,25 @@ class Controller:
 						self.annotationInfo[self.currentClass] = {'@': self.annotationStack, 'Method': []}
 						self.annotationStack = {}
 						continue
+					if pattern.isMethodStart():
+						self.bracketFlag = 1
+						continue
+					if pattern.isMethodStop():
+						self.bracketFlag = 0
+						continue
+					if self.currentMethod is not None:
+						for i in range(0, len(line)):
+							if line[i] == '{':
+								self.bracketFlag += 1
+							if line[i] == '}':
+								self.bracketFlag -= 1
+						if self.bracketFlag > 0:
+							self.methodStack[self.currentMethod]["Block"] += line + '\n'
+						continue
+					print 'IGNORE', line
+		print self.methodStack
 		if self.currentClass is None:
 			print 'Controller class does not exist !'
-			print headerPath
 			exit()
 
 	def generateHeader(self):
@@ -199,33 +227,51 @@ class Controller:
 		if len(self.stackPublic) > 0:
 			self.headerContent += '\tpublic:\n'
 		for publicItem in self.stackPublic:
-			self.headerContent += '\t\t' + publicItem.strip() + ';\n'
+			self.headerContent += '\t\t' + publicItem.strip()
+			if not self.headerContent.endswith(';'):
+				self.headerContent += ";"
+			self.headerContent += '\n'
 		if len(self.stackPrivate) > 0:
 			self.headerContent += '\tprivate:\n'
 		for privateItem in self.stackPrivate:
-			self.headerContent += '\t\t' + privateItem.strip() + ';\n'
+			self.headerContent += '\t\t' + privateItem.strip()
+			if not self.headerContent.endswith(';'):
+				self.headerContent += ';'
+			self.headerContent += '\n'
 		if len(self.stackProtected) > 0:
 			self.headerContent += '\tprotected:\n'
 		for protectedItem in self.stackProtected:
-			self.headerContent += '\t\t' + protectedItem.strip() + ';\n'
+			self.headerContent += '\t\t' + protectedItem.strip()
+			if not self.headerContent.endswith(';'):
+				self.headerContent += ';'
+			self.headerContent += '\n'
 		for protectedItem in self.stackNonAccessModifier:
-			self.headerContent += '\t' + protectedItem.strip() + ';\n'
+			self.headerContent += '\t' + protectedItem.strip()
+			if not self.headerContent.endswith(';'):
+				self.headerContent += ';'
+			self.headerContent += '\n'
 		self.headerContent += '};'
-
+		
+	def generateSource(self):
+		for methodName in self.methodStack:
+			self.cppContent += self.methodStack[methodName]['Header'].rstrip('\n') + '\n'
+			self.cppContent += '{\n'
+			self.cppContent += self.methodStack[methodName]['Block'].rstrip('\n') + '\n'
+			self.cppContent += '}\n'
+		
+		
 	def compileFile(self, filePath):
 		fileName = filePath.split(".")[0]
 		self.controllerName = fileName.split("/")[-1]
-		headerPath = self.Input + "/" + fileName + ".h"
 		cppPath	   = self.Input + "/" + fileName + ".cpp"
 		destHeaderPath = self.Output + "/" + fileName + ".h"
 		destCppPath = self.Output + "/" + fileName + ".cpp"
 
 		self.headerContent = ''
 		self.cppContent = '#include "'+ self.controllerName + '.h"\n'
-		self.parseHeaderFile(headerPath)
+		self.parseController(cppPath)
 		self.generateHeader()
-		#self.parseSourceFile(cppPath)
-
+		self.generateSource()
 		# Prepare to write
 		header = open(destHeaderPath, 'w')
 		cpp = open(destCppPath, 'w')
@@ -284,7 +330,7 @@ class Controller:
 #include <app/controller.h>
 namespace app {
 	ListController getControllers() {
-		ListController controllers = new ListController;{{ controllers }}
+		ListController controllers;{{ controllers }}
 		return controllers;
 	}
 }"""
@@ -300,32 +346,33 @@ namespace app {
 				controllerList += tab(11) + '->setHash("' + hashAction + '")'
 				if len(methodInfo['@']['@Argument']) > 0:
 					for argumentPair in methodInfo['@']['@Argument']:
-						controllerList += tab(11) + '->addArgument("' + argumentPair[0] + '","' + argumentPair[1] + '")'
+						controllerList += tab(11) + '->addArgument(new ActionArgument("' + argumentPair[0] + '","' + argumentPair[1] + '"))'
 				controllerList += tab(9) + ')'
-			controllerList += ';';
+			controllerList += ';'
 		controllersContent = self.renderString(controllersTemplate, {
 			'controllers' : controllerList
 		})
 		controllers.write(controllersContent)
-		print 'Write done'
-		exit()
 
 	def generateNginxConfig(self):
 		annotationList = self.mergeAnnotation()
+		#pprint.pprint(annotationList)
 		location = ""
 		configContent = """
-		location /test {
-		}
-		"""
+location / {
+	app 123456789;
+}"""
 		configContent = self.Template.nginx_config.replace('{{ app }}', configContent)
-		nginx = open(self.Config + '/app.conf', 'w')
+		app_config = self.Config + '/app.conf'
+		print app_config
+		nginx = open(app_config, 'w')
 		nginx.write(configContent)
 
 	def compile(self):
 		controllers = os.listdir(self.Input)
 		for controller in controllers:
 			# Controller must have header file
-			if controller.endswith('.h'):
+			if controller.endswith('.cpp'):
 				self.compileFile(controller)
 		self.generateNginxConfig()
 		self.generateControllerActionMapping()

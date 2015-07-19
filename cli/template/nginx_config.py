@@ -27,7 +27,7 @@
 nginx_config = """
 server {
 	listen 80;
-	server_name localhost;
+	server_name penlook.com;
 	{{ app }}
 }
 """

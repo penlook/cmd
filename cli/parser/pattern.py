@@ -33,13 +33,17 @@ class Pattern:
 	ANNOTATION   		= '\\@[A-Z]{1}[a-zA-Z0-9]+[\\s]+[\\w\\/\\:\"\\s]+'
 	CLASS        		= '^class[\s]+[a-zA-Z]+'
 	PROPERTY     		= '^[a-z\s]+[a-zA-Z]+(\;|([a-zA-Z0-9\s=&]+\;))'
-	METHOD       		= '^[a-z\s]+[a-zA-Z]+\(|([\a-zA-Z0-9\*\&\s,=]+)\)\;'
+	METHOD       		= '^[a-z\s]+[a-zA-Z]+\(|([\a-zA-Z0-9\*\&\s,=]+)\)'
 	TEMPLATE_VAR 		= '[a-zA-Z0-9_\&]+[\s]+\$[a-zA-Z0-9]+(\;|([a-zA-Z0-9\s=&]+\;))'
-	COMMENT      		= '^\/\/.+'
+	COMMENT			    = '^\/\/.+'
+	COMMENT_START		= '^\/\*.+'
+	COMMENT_END			= '\*\/'
 	PUBLIC	 	 		= '^public.+'
 	PRIVATE		 		= '^private.+'
 	PROTECTED			= '^protected.+'
-	END_WITH_BRACKET 	= '.+\{'
+	BRACKET_OPEN 		= '^\{'
+	BRACKET_CLOSE		= '^\}'
+	BRACKET_END		 	= '.+\}'
 
 	def __init__(self):
 		self.match = False
@@ -61,14 +65,22 @@ class Pattern:
 		if self.context.line.startswith("#include"):
 			return True
 		if self.context.line.startswith("using"):
-			self.context.line += ";"
 			return True
 		if self.context.line.startswith("template"):
 			return True
 		return False
 
 	def isComment(self):
-		return self.isMatch(self.COMMENT)
+		is_comment = self.isMatch(self.COMMENT)
+		if is_comment:
+			return True
+		if self.isMatch(self.COMMENT_START):
+			self.context.commentFlag = True
+		if self.isMatch(self.COMMENT_END):
+			self.context.commentFlag = False
+		if self.context.commentFlag:
+			return True
+		return False
 
 	def isAnnotation(self):
 		return self.isMatch(self.ANNOTATION)
@@ -82,6 +94,16 @@ class Pattern:
 	def isMethod(self):
 		return self.isMatch(self.METHOD)
 
+	def isMethodStart(self):
+		if self.isBracketOpen() and self.context.bracketFlag == 0 and self.context.currentMethod is not None:
+			return True
+		return False
+
+	def isMethodStop(self):
+		if self.isBracketClose() and self.context.bracketFlag == 1:
+			return True
+		return False
+
 	def isTemplateVariable(self):
 		return self.isMatch(self.TEMPLATE_VAR)
 
@@ -93,6 +115,12 @@ class Pattern:
 
 	def isPublic(self):
 		return self.isMatch(self.PUBLIC)
-	
+
+	def isBracketOpen(self):
+		return self.isMatch(self.BRACKET_OPEN)
+
+	def isBracketClose(self):
+		return self.isMatch(self.BRACKET_CLOSE)
+
 	def isEndWithBracket(self):
-		return self.isMatch(self.END_WITH_BRACKET)
+		return self.isMatch(self.BRACKET_END)
