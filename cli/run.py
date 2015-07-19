@@ -47,7 +47,7 @@ class Run(argparse.Action):
 	def compileView(self):
 		print 'Template - Starting complie ...'
 		view = View()
-		view.setInput(self.root + "/view") \
+		view.setInput(self.root + "/resource/view") \
 			.setOutput(self.root + "/build/app/view") \
 			.setMode(View.DEVELOPMENT) \
 			.compile()
@@ -64,9 +64,9 @@ class Run(argparse.Action):
 		print 'Controller - Done.'
 
 	def parse(self):
-		#self.compileView()
+		self.compileView()
 		self.compileController()
-		exit()
+		#exit()
 
 	def build(self):
 		system("./build.sh")

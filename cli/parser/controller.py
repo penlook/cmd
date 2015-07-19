@@ -57,6 +57,7 @@ class Controller:
 		self.annotationStack = {}
 		self.lineStack = []
 		self.currentClass = None
+		self.currentClassFull = None
 		self.currentMethod = None
 		self.isAction = False
 
@@ -88,7 +89,6 @@ class Controller:
 		pass
 
 	def parseController(self, cppPath):
-		print "PARSE : ", cppPath
 		self.initControllerParser()
 		annotationStorage = {}
 		self.annotationStack = {}
@@ -189,7 +189,6 @@ class Controller:
 							property_without_am = self.line.split('protected')[1]
 							self.stackProtected.append(property_without_am.strip())
 						if am is False:
-							print property_without_am
 							self.stackNonAccessModifier.append(property_without_am.strip())
 						continue
 					if pattern.isClass():
@@ -198,6 +197,7 @@ class Controller:
 							class_without_bracket = self.line.split('{')[0]
 						className = class_without_bracket.split(' ')[1]
 						self.currentClass = className
+						self.currentClassFull = class_without_bracket
 						self.annotationInfo[self.currentClass] = {'@': self.annotationStack, 'Method': []}
 						self.annotationStack = {}
 						continue
@@ -216,14 +216,12 @@ class Controller:
 						if self.bracketFlag > 0:
 							self.methodStack[self.currentMethod]["Block"] += line + '\n'
 						continue
-					print 'IGNORE', line
-		print self.methodStack
 		if self.currentClass is None:
 			print 'Controller class does not exist !'
 			exit()
 
 	def generateHeader(self):
-		self.headerContent += 'class ' + self.currentClass + "\n{\n"
+		self.headerContent += self.currentClassFull + "\n{\n"
 		if len(self.stackPublic) > 0:
 			self.headerContent += '\tpublic:\n'
 		for publicItem in self.stackPublic:
