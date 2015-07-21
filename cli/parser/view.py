@@ -43,13 +43,13 @@ class View:
 #include <sys/func.h>
 #include <app/app.h>
 namespace app {
-namespace Template {
+namespace view {
 {{ headerContent }}
 }\n}"""
 		self.templateCPP = """// AUTO GENERATED
 #include "view.h"
 namespace app {
-namespace Template {
+namespace view {
 void {{ fileName }}(App* app) {
 char const *html[] = {
 {{ htmlContent }}\'\\0\'

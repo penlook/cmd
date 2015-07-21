@@ -118,54 +118,84 @@ class Controller:
 					if pattern.isMethod() and self.bracketFlag == 0:
 						# Default
 						method_without_am = self.line
-						action_type = ''
 						am = False
-						if self.isAction:
-							action_type = 'void'
 						if pattern.isPublic():
-							method_without_am = self.line.split('public')[1]
-							method_without_am = action_type + method_without_am
+							method_without_am = self.line.split('public')[1].strip()
+							method_without_am = method_without_am
+							if self.isAction:
+								method_without_am = 'void '+ method_without_am
 							self.stackPublic.append(method_without_am)
+							if self.isAction:
+								# Method as Action
+								action_without_am = method_without_am.split('(')[0] + "(ActionArgumentList)"
+								self.stackPublic.append(action_without_am)
 							am = True
 						if pattern.isPrivate():
-							method_without_am = self.line.split('private')[1]
-							method_without_am = action_type + method_without_am
+							method_without_am = self.line.split('private')[1].strip()
+							method_without_am = method_without_am
+							if self.isAction:
+								method_without_am = 'void '+ method_without_am
 							self.stackPrivate.append(method_without_am)
+							if self.isAction:
+								# Method as Action
+								action_without_am = method_without_am.split('(')[0] + "(ActionArgumentList)"
+								self.stackPrivate.append(action_without_am)
 							am = True
 						if pattern.isProtected():
-							method_without_am = self.line.split('protected')[1]
-							method_without_am = action_type + method_without_am
+							method_without_am = self.line.split('protected')[1].strip()
+							method_without_am = method_without_am
+							if self.isAction:
+								method_without_am = 'void '+ method_without_am
 							self.stackProtected.append(method_without_am)
+							if self.isAction:
+								# Method as Action
+								action_without_am = method_without_am.split('(')[0] + "(ActionArgumentList)"
+								self.stackPrivate.append(action_without_am)
 							am = True
 						if am is False:
-							method_without_am = action_type + method_without_am
+							method_without_am = method_without_am
 							self.stackNonAccessModifier.append(method_without_am)
+
+						#print method_without_am
+						indexL = method_without_am.index('(')
+						indexR = indexL
+						while indexR > 0:
+							if method_without_am[indexR] == ' ':
+								break
+							indexR = indexR - 1
+						currentMethod = method_without_am[indexR : indexL]
+						self.currentMethod = currentMethod
+						#print currentMethod
+						self.methodStack[self.currentMethod] = {}
+						if self.isAction:
+							self.methodStack[self.currentMethod]["Header"] = "void " + className + "::" + currentMethod.strip() + '(ActionArgumentList args)'
+						else:
+							self.methodStack[self.currentMethod]["Header"] = method_without_am[0 : indexR] + " " + className + "::" + currentMethod.strip() + method_without_am[indexL:]
+						self.methodStack[self.currentMethod]["Block"] = ''
+						indexL = method_without_am.index('(')
+						indexR = method_without_am.index(')')
+						#self.methodStack[self.currentMethod]["Header"] += method_without_am[indexL : indexR + 1]
+						arguments = method_without_am[indexL + 1 : indexR]
+						argumentPairs = arguments.split(',')
+						argumentList = []
+						if len(argumentPairs) > 0:
+							for argumentPair in argumentPairs:
+								variableCom  = argumentPair.split(' ')
+								variableName = variableCom[-1].strip()
+								variableType = ''
+								variableType = variableType.join(variableCom[0:len(variableCom) - 1]).strip()
+								if (len(variableType) > 0) and (len(variableName) > 0):
+									argumentList.append([variableType, variableName])
+						self.methodStack[self.currentMethod]["Argument"] = argumentList
+						declare = ''
+						if self.isAction:
+							for argument in argumentList:
+								#self.cppContent += annotation[0] + ' ' + annotation[1] + ' = args.front()->getVariable();\nargs.pop(); \n'
+								declare += 'ActionArgument *arg' + argument[1] +' = args.front();\nargs.pop();\n'
+								declare += 'cout << arg' + argument[1] + '->getType();\n'
+								#self.cppContent  += 'cout << args.pop();\n'
+						self.methodStack[self.currentMethod]['ArgDeclaration'] = declare
 						if len(self.annotationStack) > 0:
-							indexL = method_without_am.index('(')
-							indexR = indexL
-							while indexR > 0:
-								if method_without_am[indexR] == ' ':
-									break
-								indexR = indexR - 1
-							currentMethod = method_without_am[indexR : indexL]
-							self.currentMethod = currentMethod
-							self.methodStack[self.currentMethod] = {}
-							self.methodStack[self.currentMethod]["Header"] = method_without_am[0 : indexR] + " " + className + "::" + currentMethod.strip()
-							self.methodStack[self.currentMethod]["Block"] = ''
-							indexL = method_without_am.index('(')
-							indexR = method_without_am.index(')')
-							self.methodStack[self.currentMethod]["Header"] += method_without_am[indexL : indexR + 1]
-							arguments = method_without_am[indexL + 1 : indexR]
-							argumentPairs = arguments.split(',')
-							argumentList = []
-							if len(argumentPairs) > 0:
-								for argumentPair in argumentPairs:
-									variableCom  = argumentPair.split(' ')
-									variableName = variableCom[-1].strip()
-									variableType = ''
-									variableType = variableType.join(variableCom[1:len(variableCom) - 1]).strip()
-									if (len(variableType) > 0) and (len(variableName) > 0):
-										argumentList.append([variableType, variableName])
 							self.annotationStack['@Argument'] = argumentList
 							self.annotationInfo[self.currentClass]['Method'].append(
 								{'Name': currentMethod, '@': self.annotationStack }
@@ -206,6 +236,7 @@ class Controller:
 						continue
 					if pattern.isMethodStop():
 						self.bracketFlag = 0
+						self.isAction = False
 						continue
 					if self.currentMethod is not None:
 						for i in range(0, len(line)):
@@ -221,6 +252,7 @@ class Controller:
 			exit()
 
 	def generateHeader(self):
+		self.headerContent += 'namespace app {\nnamespace controller {\n'
 		self.headerContent += self.currentClassFull + "\n{\n"
 		if len(self.stackPublic) > 0:
 			self.headerContent += '\tpublic:\n'
@@ -248,16 +280,19 @@ class Controller:
 			if not self.headerContent.endswith(';'):
 				self.headerContent += ';'
 			self.headerContent += '\n'
-		self.headerContent += '};'
-		
+		self.headerContent += '};\n'
+		self.headerContent += "}\n}"
+
 	def generateSource(self):
+		self.cppContent += 'namespace app {\nnamespace controller {\n'
 		for methodName in self.methodStack:
 			self.cppContent += self.methodStack[methodName]['Header'].rstrip('\n') + '\n'
 			self.cppContent += '{\n'
+			self.cppContent += self.methodStack[methodName]['ArgDeclaration']
 			self.cppContent += self.methodStack[methodName]['Block'].rstrip('\n') + '\n'
 			self.cppContent += '}\n'
-		
-		
+		self.cppContent += '}\n}'
+
 	def compileFile(self, filePath):
 		fileName = filePath.split(".")[0]
 		self.controllerName = fileName.split("/")[-1]
@@ -273,7 +308,6 @@ class Controller:
 		# Prepare to write
 		header = open(destHeaderPath, 'w')
 		cpp = open(destCppPath, 'w')
-
 		# Write content to file
 		header.write(self.headerContent)
 		header.close()
@@ -335,17 +369,22 @@ namespace app {
 		controllerList = ''
 		hashMd5 = hashlib.md5()
 		for className in self.annotationInfo:
-			controllerList += tab(2) + 'controllers["' + className +'"] = (new Controller)' + tab(9) +'->setName("' + className + '")'
+			controllerName = className.lower() + 'Controller'
+			controllerList += tab(2) + 'controller::' + className + ' ' + controllerName +' = new controller::' + className + ';'
+			controllerList += tab(2) + 'controller["' + className + '"] = ' + controllerName + ';'
+			controllerList += tab(2) + controllerName + tab(4) + '->setName("' + className + '")'
 			for methodInfo in self.annotationInfo[className]['Method']:
 				actionName = methodInfo['Name'].strip()
 				hashMd5.update(className + '-' + actionName)
 				hashAction = hashMd5.hexdigest()
-				controllerList += tab(9) + '->addAction(' + tab(10) +'(new Action)' + tab(11) + '->setName("' + actionName +'")'
-				controllerList += tab(11) + '->setHash("' + hashAction + '")'
+				controllerList += tab(4) + '->addAction(' + tab(5) +'(new Action)'
+				controllerList += tab(6) + '->setName("' + actionName +'")'
+				controllerList += tab(6) + '->setCallback(' + controllerName + '->' + actionName + ')'
+				controllerList += tab(6) + '->setHash("' + hashAction + '")'
 				if len(methodInfo['@']['@Argument']) > 0:
 					for argumentPair in methodInfo['@']['@Argument']:
-						controllerList += tab(11) + '->addArgument(new ActionArgument("' + argumentPair[0] + '","' + argumentPair[1] + '"))'
-				controllerList += tab(9) + ')'
+						controllerList += tab(6) + '->addArgument(new ActionArgument("' + argumentPair[0] + '","' + argumentPair[1] + '"))'
+				controllerList += tab(4) + ')'
 			controllerList += ';'
 		controllersContent = self.renderString(controllersTemplate, {
 			'controllers' : controllerList
@@ -362,7 +401,6 @@ location / {
 }"""
 		configContent = self.Template.nginx_config.replace('{{ app }}', configContent)
 		app_config = self.Config + '/app.conf'
-		print app_config
 		nginx = open(app_config, 'w')
 		nginx.write(configContent)
 

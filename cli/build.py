@@ -29,6 +29,7 @@ import argparse
 import sys
 from os import *
 from parser import *
+import template
 
 #$ pen build
 #$ pen build app
@@ -42,14 +43,28 @@ class Build(argparse.Action):
 		system("sync && echo 3 > /proc/sys/vm/drop_caches")
 		system("pkill pendev && service nginx stop")
 
-	def parse(self):
+	def compileView(self):
 		print 'Template - Starting complie ...'
 		view = View()
-		view.setInput(self.root + "/view") \
-			.setOutput(self.root + "/build/app/resource/view") \
+		view.setInput(self.root + "/resource/view") \
+			.setOutput(self.root + "/build/app/view") \
 			.setMode(View.PRODUCTION) \
 			.compile()
 		print 'Template - Done.'
+
+	def compileController(self):
+		print 'Controller - Starting complie ...'
+		controller = Controller()
+		controller.setInput(self.root + "/controller") \
+				  .setOutput(self.root + "/build/app/controller") \
+				  .setConfig(self.root + "/build/app/config") \
+				  .setTemplate(template) \
+				  .compile()
+		print 'Controller - Done.'
+
+	def parse(self):
+		self.compileView()
+		self.compileController()
 
 	def config(self):
 		system('./config.sh')
