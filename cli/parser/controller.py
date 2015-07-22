@@ -188,12 +188,15 @@ class Controller:
 									argumentList.append([variableType, variableName])
 						self.methodStack[self.currentMethod]["Argument"] = argumentList
 						declare = ''
+						#print argumentList
 						if self.isAction:
 							for argument in argumentList:
-								#self.cppContent += annotation[0] + ' ' + annotation[1] + ' = args.front()->getVariable();\nargs.pop(); \n'
-								declare += 'ActionArgument *arg' + argument[1] +' = args.front();\nargs.pop();\n'
-								declare += 'cout << arg' + argument[1] + '->getType();\n'
+								#declare += argument[0] + ' ' + argument[1] + ' = args.front()->getVariable();\nargs.pop(); \n'
+								#declare += 'ActionArgument *arg' + argument[1] +' = args.front();\nargs.pop();\n'
+								#declare += 'cout << arg' + argument[1] + '->getVariable();\n'
 								#self.cppContent  += 'cout << args.pop();\n'
+								#declare += argument[0] + ' ' + argument[1] +';\n';
+								pass
 						self.methodStack[self.currentMethod]['ArgDeclaration'] = declare
 						if len(self.annotationStack) > 0:
 							self.annotationStack['@Argument'] = argumentList
@@ -366,8 +369,16 @@ namespace app {
 		ListController controllers;{{ controllers }}
 		return controllers;
 	}
+	void callbackAction(Controller *controller)
+	{
+		ListController controllers = getControllers();
+		Action *action = controller->getAction();
+		string actionFlag = controller->getName() + "-" + action->getName();
+		ActionArgumentList args = action->getArguments();{{ actions }}
+	}
 }"""
 		controllerList = ''
+		actionList = ''
 		headerList = ''
 		hashMd5 = hashlib.md5()
 		for className in self.annotationInfo:
@@ -378,11 +389,11 @@ namespace app {
 			controllerList += tab(2) + controllerName + tab(4) + '->setName("' + className + '")'
 			for methodInfo in self.annotationInfo[className]['Method']:
 				actionName = methodInfo['Name'].strip()
+				actionList += tab(2) + 'if (actionFlag == "' + className + '-' + actionName + '") { controller::' + className + ' *' + className.lower() + ' = (controller::' + className +'*) controllers[controller->getName()];' + className.lower() +'->'+ actionName + '(args);return;}'
 				hashMd5.update(className + '-' + actionName)
 				hashAction = hashMd5.hexdigest()
 				controllerList += tab(4) + '->addAction(' + tab(5) +'(new Action)'
 				controllerList += tab(6) + '->setName("' + actionName +'")'
-				controllerList += tab(6) + '->setCallback(' + controllerName + '->' + actionName + ')'
 				controllerList += tab(6) + '->setHash("' + hashAction + '")'
 				if len(methodInfo['@']['@Argument']) > 0:
 					for argumentPair in methodInfo['@']['@Argument']:
@@ -392,6 +403,7 @@ namespace app {
 		
 		controllersContent = self.renderString(controllersTemplate, {
 			'controllers' : controllerList,
+			'actions' : actionList,
 			'headers': headerList
 		})
 		controllers.write(controllersContent)
