@@ -360,6 +360,7 @@ class Controller:
 #include <vector>
 #include <functional>
 #include <app/controller.h>
+{{ headers }}
 namespace app {
 	ListController getControllers() {
 		ListController controllers;{{ controllers }}
@@ -367,11 +368,13 @@ namespace app {
 	}
 }"""
 		controllerList = ''
+		headerList = ''
 		hashMd5 = hashlib.md5()
 		for className in self.annotationInfo:
+			headerList += '#include "controller/' + className.lower() + '.h"\n'
 			controllerName = className.lower() + 'Controller'
-			controllerList += tab(2) + 'controller::' + className + ' ' + controllerName +' = new controller::' + className + ';'
-			controllerList += tab(2) + 'controller["' + className + '"] = ' + controllerName + ';'
+			controllerList += tab(2) + 'controller::' + className + ' *' + controllerName +' = new controller::' + className + ';'
+			controllerList += tab(2) + 'controllers["' + className + '"] = ' + controllerName + ';'
 			controllerList += tab(2) + controllerName + tab(4) + '->setName("' + className + '")'
 			for methodInfo in self.annotationInfo[className]['Method']:
 				actionName = methodInfo['Name'].strip()
@@ -386,8 +389,10 @@ namespace app {
 						controllerList += tab(6) + '->addArgument(new ActionArgument("' + argumentPair[0] + '","' + argumentPair[1] + '"))'
 				controllerList += tab(4) + ')'
 			controllerList += ';'
+		
 		controllersContent = self.renderString(controllersTemplate, {
-			'controllers' : controllerList
+			'controllers' : controllerList,
+			'headers': headerList
 		})
 		controllers.write(controllersContent)
 
