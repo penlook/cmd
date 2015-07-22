@@ -47,7 +47,7 @@ namespace view {
 {{ headerContent }}
 }\n}"""
 		self.templateCPP = """// AUTO GENERATED
-#include "view.h"
+#include "view/view.h"
 namespace app {
 namespace view {
 void {{ fileName }}(View *view) {
@@ -58,7 +58,7 @@ view->setContent(join((char**) html,"\\n"));
 }\n}\n}"""
 		self.templateMain = ""
 		self.listFileName = []
-		self.listFolderPath = ['../main/', './']
+		self.listFolderPath = ['./']
 
 	def setInput(self, inputViewFolder):
 		self.Input = inputViewFolder
@@ -141,11 +141,11 @@ view->setContent(join((char**) html,"\\n"));
 		viewH = self.renderString(self.templateH, {
 			'headerContent' : headerContent,
 		})
-		for folderPath in self.listFolderPath:
-			headerPath = self.Output + folderPath + 'view.h'
-			header = open(headerPath, 'w')
-			header.write(viewH)
-			header.close()
+		#for folderPath in self.listFolderPath:
+		headerPath = self.Output + '/view.h'
+		header = open(headerPath, 'w')
+		header.write(viewH)
+		header.close()
 
 	def scanDirectory(self, root, directory):
 		listFiles = os.listdir(root)

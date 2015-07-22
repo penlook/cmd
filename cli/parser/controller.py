@@ -362,9 +362,9 @@ class Controller:
 #include <map>
 #include <vector>
 #include <functional>
+#include "view/view.h"
 #include <app/controller.h>
 {{ headers }}
-#include "views.h"
 namespace app {
 	ListController getControllers() {
 		ListController controllers;{{ controllers }}
@@ -395,6 +395,9 @@ namespace app {
 				hashAction = hashMd5.hexdigest()
 				controllerList += tab(4) + '->addAction(' + tab(5) +'(new Action)'
 				controllerList += tab(6) + '->setName("' + actionName +'")'
+				templateFile = os.path.abspath(os.getcwd() + '/../../../app/resource/view/' + className.lower() + '/' + actionName.lower() + '.html')
+				if os.path.isfile(templateFile):
+					controllerList += tab(6) + '->setViewCallback(view::' + className.lower() + '_' + actionName.lower() + ')'
 				controllerList += tab(6) + '->setHash("' + hashAction + '")'
 				if len(methodInfo['@']['@Argument']) > 0:
 					for argumentPair in methodInfo['@']['@Argument']:
