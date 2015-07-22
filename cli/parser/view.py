@@ -41,7 +41,7 @@ class View:
 		self.templateH = """// AUTO GENERATED
 #include <sys/type.h>
 #include <sys/func.h>
-#include <app/app.h>
+#include <app/view.h>
 namespace app {
 namespace view {
 {{ headerContent }}
@@ -50,11 +50,11 @@ namespace view {
 #include "view.h"
 namespace app {
 namespace view {
-void {{ fileName }}(App* app) {
+void {{ fileName }}(View *view) {
 char const *html[] = {
 {{ htmlContent }}\'\\0\'
 };
-app->getHttpResponse()->setBody(join((char**)html, "\\n"));
+view->setContent(join((char**) html,"\\n"));
 }\n}\n}"""
 		self.templateMain = ""
 		self.listFileName = []
@@ -136,7 +136,7 @@ app->getHttpResponse()->setBody(join((char**)html, "\\n"));
 	def compileHeader(self):
 		headerContent = ''
 		for fileName in self.listFileName:
-			headerContent += 'void ' + fileName + '(App*);\n'
+			headerContent += 'void ' + fileName + '(View*);\n'
 		headerContent = headerContent[:-1]
 		viewH = self.renderString(self.templateH, {
 			'headerContent' : headerContent,

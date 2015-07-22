@@ -364,6 +364,7 @@ class Controller:
 #include <functional>
 #include <app/controller.h>
 {{ headers }}
+#include "views.h"
 namespace app {
 	ListController getControllers() {
 		ListController controllers;{{ controllers }}
