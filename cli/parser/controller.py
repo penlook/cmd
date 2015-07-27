@@ -335,7 +335,7 @@ class Controller:
 				methodInfo['@']['@Action'] = methodInfo['Name']
 				annotationList.append(methodInfo['@'])
 		return annotationList
-	
+
 	def renderString(self, template, data):
 		content = ''
 		start = 0
@@ -353,7 +353,7 @@ class Controller:
 		content += template[start:]
 		content = content.replace('"', '\"')
 		return content
-	
+
 	def generateControllerActionMapping(self):
 		controllesH = os.path.abspath(self.Output + '/../main/controllers.h')
 		controllers = open(controllesH, 'w')
@@ -370,6 +370,12 @@ namespace app {
 		ListController controllers;{{ controllers }}
 		return controllers;
 	}
+	template <typename T>
+	void convertController(T *targetController, Controller *childController)
+	{
+		childController ->setHash(targetController->getHash());
+						->setView(targetController->getView());
+	}
 	void callbackAction(Controller *controller)
 	{
 		ListController controllers = getControllers();
@@ -382,6 +388,7 @@ namespace app {
 		actionList = ''
 		headerList = ''
 		hashMd5 = hashlib.md5()
+		#pprint.pprint(self.annotationInfo)
 		for className in self.annotationInfo:
 			headerList += '#include "controller/' + className.lower() + '.h"\n'
 			controllerName = className.lower() + 'Controller'
@@ -390,21 +397,22 @@ namespace app {
 			controllerList += tab(2) + controllerName + tab(4) + '->setName("' + className + '")'
 			for methodInfo in self.annotationInfo[className]['Method']:
 				actionName = methodInfo['Name'].strip()
-				actionList += tab(2) + 'if (actionFlag == "' + className + '-' + actionName + '") { controller::' + className + ' *' + className.lower() + ' = (controller::' + className +'*) controllers[controller->getName()];' + className.lower() +'->'+ actionName + '(args);return;}'
+				actionList += tab(2) + 'if (actionFlag == "' + className + '-' + actionName + '") { controller::' + className + ' *' + className.lower() + ' = (controller::' + className +'*) controllers[controller->getName()];convertController(controller, ' + className.lower() + ');' + className.lower() +'->'+ actionName + '(args);return;}'
 				hashMd5.update(className + '-' + actionName)
 				hashAction = hashMd5.hexdigest()
 				controllerList += tab(4) + '->addAction(' + tab(5) +'(new Action)'
 				controllerList += tab(6) + '->setName("' + actionName +'")'
-				templateFile = os.path.abspath(os.getcwd() + '/../../../app/resource/view/' + className.lower() + '/' + actionName.lower() + '.html')
+				templateFile = os.path.abspath(os.getcwd() + "/../../module/home/resource/view/" + className.lower() + '/' + actionName.lower() + '.html')
 				if os.path.isfile(templateFile):
 					controllerList += tab(6) + '->setViewCallback(view::' + className.lower() + '_' + actionName.lower() + ')'
+				#for print methodInfo['@']['@Method']
 				controllerList += tab(6) + '->setHash("' + hashAction + '")'
 				if len(methodInfo['@']['@Argument']) > 0:
 					for argumentPair in methodInfo['@']['@Argument']:
 						controllerList += tab(6) + '->addArgument(new ActionArgument("' + argumentPair[0] + '","' + argumentPair[1] + '"))'
 				controllerList += tab(4) + ')'
 			controllerList += ';'
-		
+
 		controllersContent = self.renderString(controllersTemplate, {
 			'controllers' : controllerList,
 			'actions' : actionList,

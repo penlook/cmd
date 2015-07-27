@@ -28,10 +28,9 @@
 import sys
 from os import *
 import argparse
-import SimpleHTTPServer
-import SocketServer
 from parser import *
 import template
+import proxy
 
 #$ pen run
 #$ pen run app
@@ -43,11 +42,12 @@ class Run(argparse.Action):
 		# Clean up system
 		system("sync && echo 3 > /proc/sys/vm/drop_caches")
 		system("pkill pendev && service nginx stop")
+		system("fuser -k 80/tcp")
 
 	def compileView(self):
 		print 'Template - Starting complie ...'
 		view = View()
-		view.setInput(self.root + "/resource/view") \
+		view.setInput(self.root + "/module/home/resource/view") \
 			.setOutput(self.root + "/build/app/view") \
 			.setMode(View.DEVELOPMENT) \
 			.compile()
@@ -56,7 +56,7 @@ class Run(argparse.Action):
 	def compileController(self):
 		print 'Controller - Starting complie ...'
 		controller = Controller()
-		controller.setInput(self.root + "/controller") \
+		controller.setInput(self.root + "/module/home/controller") \
 				  .setOutput(self.root + "/build/app/controller") \
 				  .setConfig(self.root + "/build/app/config") \
 				  .setTemplate(template) \
@@ -66,10 +66,17 @@ class Run(argparse.Action):
 	def parse(self):
 		self.compileView()
 		self.compileController()
-		#exit()
 
 	def build(self):
 		system("./build.sh")
+		
+	def proxy(self):
+		try:
+			server = proxy.Proxy()
+			server.setContext(self)
+			server.listen()
+		except KeyboardInterrupt:
+			pass
 
 	def __call__(self, parser, args, values, option_string = None):
 		self.root = getcwd();
@@ -79,10 +86,8 @@ class Run(argparse.Action):
 		self.cwd = self.root
 
 		self.prepare()
-		self.parse()
-		self.build()
+		self.proxy()
 
-		#PORT = 8000
 		#Handler = SimpleHTTPServer.SimpleHTTPRequestHandler
 		#httpd = SocketServer.TCPServer(("", PORT), Handler)
 		#print "serving at port", PORT
