@@ -34,7 +34,7 @@ class Pattern:
 	CLASS        		= '^class[\s]+[a-zA-Z]+'
 	PROPERTY     		= '^[a-z\s]+[a-zA-Z]+(\;|([a-zA-Z0-9\s=&]+\;))'
 	METHOD       		= '^[a-z\s]+[a-zA-Z]+\(|([\a-zA-Z0-9\*\&\s,=]+)\)'
-	TEMPLATE_VAR 		= '[a-zA-Z0-9_\&]+[\s]+\$[a-zA-Z0-9]+(\;|([a-zA-Z0-9\s=&]+\;))'
+	TEMPLATE_VAR 		= '^[a-zA-Z_]+\<[a-zA-Z\s\*]+\>\s+\=[a-zA-Z0-9\s\"]+\;'
 	COMMENT			    = '^\/\/.+'
 	COMMENT_START		= '^\/\*.+'
 	COMMENT_END			= '\*\/'

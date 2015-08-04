@@ -195,7 +195,7 @@ class Controller:
 								#declare += 'ActionArgument *arg' + argument[1] +' = args.front();\nargs.pop();\n'
 								#declare += 'cout << arg' + argument[1] + '->getVariable();\n'
 								#self.cppContent  += 'cout << args.pop();\n'
-								#declare += argument[0] + ' ' + argument[1] +';\n';
+								#declare += argument[0] + ' ' + argument[1] +' = args.front()->getVariable();\nargs.pop();\n';
 								pass
 						self.methodStack[self.currentMethod]['ArgDeclaration'] = declare
 						if len(self.annotationStack) > 0:
@@ -234,6 +234,18 @@ class Controller:
 						self.annotationInfo[self.currentClass] = {'@': self.annotationStack, 'Method': []}
 						self.annotationStack = {}
 						continue
+					if pattern.isTemplateVariable():
+						equal = self.line.index("=")
+						variable = self.line[:equal]
+						value = self.line[equal:]
+						bracketStart = variable.index("<")
+						bracketStop  = variable.index(">")
+						variableName = variable[:bracketStart]
+						variableType = variable[bracketStart + 1 : bracketStop]
+						self.line = variableType + " " + variableName + ' ' + value + '\n';
+						self.line += 'this->getView()->getData()->set<' + variableType + '>("' + variableName + '", ' + variableName + ');'
+						print "NAME ", variableName
+						print "TYPE ", variableType
 					if pattern.isMethodStart():
 						self.bracketFlag = 1
 						continue
@@ -242,13 +254,13 @@ class Controller:
 						self.isAction = False
 						continue
 					if self.currentMethod is not None:
-						for i in range(0, len(line)):
-							if line[i] == '{':
+						for i in range(0, len(self.line)):
+							if self.line[i] == '{':
 								self.bracketFlag += 1
-							if line[i] == '}':
+							if self.line[i] == '}':
 								self.bracketFlag -= 1
 						if self.bracketFlag > 0:
-							self.methodStack[self.currentMethod]["Block"] += line + '\n'
+							self.methodStack[self.currentMethod]["Block"] += self.line + '\n'
 						continue
 		if self.currentClass is None:
 			print 'Controller class does not exist !'
@@ -373,8 +385,8 @@ namespace app {
 	template <typename T>
 	void convertController(T *targetController, Controller *childController)
 	{
-		childController ->setHash(targetController->getHash());
-						->setView(targetController->getView());
+		childController ->setHash(targetController->getHash())
+						->setView(new View);
 	}
 	void callbackAction(Controller *controller)
 	{
@@ -439,5 +451,5 @@ location / {
 			# Controller must have header file
 			if controller.endswith('.cpp'):
 				self.compileFile(controller)
-		self.generateNginxConfig()
-		self.generateControllerActionMapping()
+		#self.generateNginxConfig()
+		#self.generateControllerActionMapping()

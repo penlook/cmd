@@ -29,8 +29,8 @@ import sys
 from os import *
 import argparse
 from parser import *
-import template
 import proxy
+import time
 
 #$ pen run
 #$ pen run app
@@ -47,7 +47,7 @@ class Run(argparse.Action):
 	def compileView(self):
 		print 'Template - Starting complie ...'
 		view = View()
-		view.setInput(self.root + "/module/home/resource/view") \
+		view.setInput(self.root + "/module/home/user/resource/view") \
 			.setOutput(self.root + "/build/app/view") \
 			.setMode(View.DEVELOPMENT) \
 			.compile()
@@ -56,16 +56,18 @@ class Run(argparse.Action):
 	def compileController(self):
 		print 'Controller - Starting complie ...'
 		controller = Controller()
-		controller.setInput(self.root + "/module/home/controller") \
+		controller.setInput(self.root + "/module/home/user/controller") \
 				  .setOutput(self.root + "/build/app/controller") \
 				  .setConfig(self.root + "/build/app/config") \
-				  .setTemplate(template) \
 				  .compile()
 		print 'Controller - Done.'
 
 	def parse(self):
-		self.compileView()
-		self.compileController()
+		app = App()
+		app.setRoot(self.root)\
+		   .parse()
+		#self.compileView()
+		#self.compileController()
 
 	def build(self):
 		system("./build.sh")
@@ -74,7 +76,15 @@ class Run(argparse.Action):
 		try:
 			server = proxy.Proxy()
 			server.setContext(self)
-			server.listen()
+			while True:
+				try:
+					print  'trying to server ...'
+					server.listen()
+				except IOError as e:
+					print e
+					time.sleep(2)
+					continue
+				break
 		except KeyboardInterrupt:
 			pass
 
@@ -86,7 +96,8 @@ class Run(argparse.Action):
 		self.cwd = self.root
 
 		self.prepare()
-		self.proxy()
+		self.parse()
+		#self.proxy()
 
 		#Handler = SimpleHTTPServer.SimpleHTTPRequestHandler
 		#httpd = SocketServer.TCPServer(("", PORT), Handler)

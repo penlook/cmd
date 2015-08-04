@@ -26,7 +26,7 @@
 #     Loi Nguyen       <loint@penlook.com>
 
 import argparse
-import template
+from parser import *
 import os, string
 
 #$ pen create app

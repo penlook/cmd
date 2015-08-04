@@ -29,7 +29,6 @@ import argparse
 import sys
 from os import *
 from parser import *
-import template
 
 #$ pen build
 #$ pen build app
@@ -46,7 +45,7 @@ class Build(argparse.Action):
 	def compileView(self):
 		print 'Template - Starting complie ...'
 		view = View()
-		view.setInput(self.root + "/resource/view") \
+		view.setInput(self.root + "/module/home/user/resource/view") \
 			.setOutput(self.root + "/build/app/view") \
 			.setMode(View.PRODUCTION) \
 			.compile()
@@ -55,7 +54,7 @@ class Build(argparse.Action):
 	def compileController(self):
 		print 'Controller - Starting complie ...'
 		controller = Controller()
-		controller.setInput(self.root + "/controller") \
+		controller.setInput(self.root + "/module/home/user/controller") \
 				  .setOutput(self.root + "/build/app/controller") \
 				  .setConfig(self.root + "/build/app/config") \
 				  .setTemplate(template) \
