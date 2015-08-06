@@ -7,4 +7,4 @@ $compiler->setOptions(array(
 	"compiledExtension" => ".compiled"
 ));
 
-echo $compiler->compileString('{{ "hello" }}') . "\n\n";
+$compiler->compileFile('views/app.volt', 'views/app.cpp');

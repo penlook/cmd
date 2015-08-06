@@ -1391,7 +1391,7 @@ class Compiler implements InjectionAwareInterface
 				}
 
 				if type == PHVOLT_T_ELSEFOR {
-					let compilation .= "<?php $" . prefixLevel . "iterated = false; ?>";
+					let compilation .= "<?cpp $" . prefixLevel . "iterated = false; ?>";
 					let forElse = prefixLevel;
 					let this->_forElsePointers[level] = forElse;
 					break;
@@ -1411,7 +1411,7 @@ class Compiler implements InjectionAwareInterface
 		 * Generate the loop context for the "foreach"
 		 */
 		if isset loopContext[level] {
-			let compilation .= "<?php $" . prefixLevel . "iterator = " . exprCode . "; ";
+			let compilation .= "<?cpp $" . prefixLevel . "iterator = " . exprCode . "; ";
 			let compilation .= "$" . prefixLevel . "incr = 0; ";
 			let compilation .= "$" . prefixLevel . "loop = new stdClass(); ";
 			let compilation .= "$" . prefixLevel . "loop->length = count($" . prefixLevel . "iterator); ";
@@ -1433,9 +1433,9 @@ class Compiler implements InjectionAwareInterface
 		 * Check if a "key" variable needs to be calculated
 		 */
 		if fetch key, statement["key"] {
-			let compilation .= "<?php foreach (" . iterator . " as $" . key . " => $" . variable . ") { ";
+			let compilation .= "<?cpp foreach (" . iterator . " as $" . key . " => $" . variable . ") { ";
 		} else {
-			let compilation .= "<?php foreach (" . iterator . " as $" . variable . ") { ";
+			let compilation .= "<?cpp foreach (" . iterator . " as $" . variable . ") { ";
 		}
 
 		/**
@@ -1451,7 +1451,7 @@ class Compiler implements InjectionAwareInterface
 		 * Generate the loop context inside the cycle
 		 */
 		if isset loopContext[level] {
-			let compilation .= "<?php $" . prefixLevel . "loop->first = ($" . prefixLevel . "incr == 0); ";
+			let compilation .= "<?cpp $" . prefixLevel . "loop->first = ($" . prefixLevel . "incr == 0); ";
 			let compilation .= "$" . prefixLevel . "loop->index = $" . prefixLevel . "incr + 1; ";
 			let compilation .= "$" . prefixLevel . "loop->index0 = $" . prefixLevel . "incr; ";
 			let compilation .= "$" . prefixLevel . "loop->revindex = $" . prefixLevel . "loop->length - $" . prefixLevel . "incr; ";
@@ -1463,7 +1463,7 @@ class Compiler implements InjectionAwareInterface
 		 * Update the forelse var if it"s iterated at least one time
 		 */
 		if typeof forElse == "string" {
-			let compilation .= "<?php $" . forElse . "iterated = true; ?>";
+			let compilation .= "<?cpp $" . forElse . "iterated = true; ?>";
 		}
 
 		/**
@@ -1472,16 +1472,16 @@ class Compiler implements InjectionAwareInterface
 		let compilation .= code;
 
 		if isset statement["if_expr"] {
-			let compilation .= "<?php } ?>";
+			let compilation .= "<?cpp } ?>";
 		}
 
 		if typeof forElse == "string" {
-			let compilation .= "<?php } ?>";
+			let compilation .= "<?cpp } ?>";
 		} else {
 			if isset loopContext[level] {
-				let compilation .= "<?php $" . prefixLevel . "incr++; } ?>";
+				let compilation .= "<?cpp $" . prefixLevel . "incr++; } ?>";
 			} else {
-				let compilation .= "<?php } ?>";
+				let compilation .= "<?cpp } ?>";
 			}
 		}
 
@@ -1500,9 +1500,9 @@ class Compiler implements InjectionAwareInterface
 		let level = this->_foreachLevel;
 		if fetch prefix, this->_forElsePointers[level] {
 			if isset this->_loopPointers[level] {
-				return "<?php $" . prefix . "incr++; } if (!$" . prefix . "iterated) { ?>";
+				return "<?cpp $" . prefix . "incr++; } if (!$" . prefix . "iterated) { ?>";
 			}
-			return "<?php } if (!$" . prefix . "iterated) { ?>";
+			return "<?cpp } if (!$" . prefix . "iterated) { ?>";
 		}
 		return "";
 	}
@@ -1524,7 +1524,7 @@ class Compiler implements InjectionAwareInterface
 		/**
 		 * Process statements in the "true" block
 		 */
-		let compilation = "<?php if (" . this->expression(expr) . ") { ?>" . this->_statementList(statement["true_statements"], extendsMode);
+		let compilation = "<?cpp if (" . this->expression(expr) . ") { ?>" . this->_statementList(statement["true_statements"], extendsMode);
 
 		/**
 		 * Check for a "else"/"elseif" block
@@ -1534,10 +1534,10 @@ class Compiler implements InjectionAwareInterface
 			/**
 			 * Process statements in the "false" block
 			 */
-			let compilation .= "<?php } else { ?>" . this->_statementList(blockStatements, extendsMode);
+			let compilation .= "<?cpp } else { ?>" . this->_statementList(blockStatements, extendsMode);
 		}
 
-		let compilation .= "<?php } ?>";
+		let compilation .= "<?cpp } ?>";
 
 		return compilation;
 	}
@@ -1559,7 +1559,7 @@ class Compiler implements InjectionAwareInterface
 		/**
 		 * "elseif" statement
 		 */
-		return "<?php } elseif (" . this->expression(expr) . ") { ?>";
+		return "<?cpp } elseif (" . this->expression(expr) . ") { ?>";
 	}
 
 	/**
@@ -1580,7 +1580,7 @@ class Compiler implements InjectionAwareInterface
 		 * Cache statement
 		 */
 		let exprCode = this->expression(expr);
-		let compilation = "<?php $_cache[" . this->expression(expr) . "] = $this->di->get('viewCache'); ";
+		let compilation = "<?cpp $_cache[" . this->expression(expr) . "] = $this->di->get('viewCache'); ";
 		if fetch lifetime, statement["lifetime"] {
 			let compilation .= "$_cacheKey[" . exprCode . "]";
 			if lifetime["type"] == PHVOLT_T_IDENTIFIER {
@@ -1603,13 +1603,13 @@ class Compiler implements InjectionAwareInterface
 		 */
 		if fetch lifetime, statement["lifetime"] {
 			if lifetime["type"] == PHVOLT_T_IDENTIFIER {
-				let compilation .= "<?php $_cache[" . exprCode . "]->save(" . exprCode . ", null, $" . lifetime["value"] . "); ";
+				let compilation .= "<?cpp $_cache[" . exprCode . "]->save(" . exprCode . ", null, $" . lifetime["value"] . "); ";
 			} else {
-				let compilation .= "<?php $_cache[" . exprCode . "]->save(" . exprCode . ", null, " . lifetime["value"] . "); ";
+				let compilation .= "<?cpp $_cache[" . exprCode . "]->save(" . exprCode . ", null, " . lifetime["value"] . "); ";
 			}
 			let compilation .= "} else { echo $_cacheKey[" . exprCode . "]; } ?>";
 		} else {
-			let compilation .= "<?php $_cache[" . exprCode . "]->save(" . exprCode . "); } else { echo $_cacheKey[" . exprCode . "]; } ?>";
+			let compilation .= "<?cpp $_cache[" . exprCode . "]->save(" . exprCode . "); } else { echo $_cacheKey[" . exprCode . "]; } ?>";
 		}
 
 		return compilation;
@@ -1629,7 +1629,7 @@ class Compiler implements InjectionAwareInterface
 			throw new Exception("Corrupted statement");
 		}
 
-		let compilation = "<?php";
+		let compilation = "<?cpp";
 
 		/**
 		 * A single set can have several assigments
@@ -1693,7 +1693,7 @@ class Compiler implements InjectionAwareInterface
 		/**
 		 * "Do" statement
 		 */
-		return "<?php " . this->expression(expr) . "; ?>";
+		return "<?cpp " . this->expression(expr) . "; ?>";
 	}
 
 	/**
@@ -1713,7 +1713,7 @@ class Compiler implements InjectionAwareInterface
 		/**
 		 * "Return" statement
 		 */
-		return "<?php return " . this->expression(expr) . "; ?>";
+		return "<?cpp return " . this->expression(expr) . "; ?>";
 	}
 
 	/**
@@ -1784,10 +1784,10 @@ class Compiler implements InjectionAwareInterface
 		 * Echo statement
 		 */
 		if this->_autoescape {
-			return "<?php echo $this->escaper->escapeHtml(" . exprCode . "); ?>";
+			return "<?cpp $this->escaper->escapeHtml(" . exprCode . "); ?>";
 		}
 
-		return "<?php echo " . exprCode . "; ?>";
+		return "<?cpp view->content += str(" . exprCode . "); ?>";
 	}
 
 	/**
@@ -1857,10 +1857,10 @@ class Compiler implements InjectionAwareInterface
 		 * Use partial
 		 */
 		if !fetch params, statement["params"] {
-			return "<?php $this->partial(" . path . "); ?>";
+			return "<?cpp $this->partial(" . path . "); ?>";
 		}
 
-		return "<?php $this->partial(" . path . ", " . this->expression(params) . "); ?>";
+		return "<?cpp $this->partial(" . path . ", " . this->expression(params) . "); ?>";
 	}
 
 	/**
@@ -1891,7 +1891,7 @@ class Compiler implements InjectionAwareInterface
 
 		let macroName = "$this->_macros['" . name . "']";
 
-		let code = "<?php ";
+		let code = "<?cpp ";
 
 		if !fetch parameters, statement["parameters"] {
 			let code .= macroName . " = function() { ?>";
@@ -1930,9 +1930,9 @@ class Compiler implements InjectionAwareInterface
 			/**
 			 * Process statements block
 			 */
-			let code .= this->_statementList(blockStatements, extendsMode) . "<?php }; ";
+			let code .= this->_statementList(blockStatements, extendsMode) . "<?cpp }; ";
 		}  else {
-			let code .= "<?php }; ";
+			let code .= "<?cpp }; ";
 		}
 
 		/**
@@ -2145,14 +2145,14 @@ class Compiler implements InjectionAwareInterface
 					/**
 					 * "Continue" statement
 					 */
-					let compilation .= "<?php continue; ?>";
+					let compilation .= "<?cpp continue; ?>";
 					break;
 
 				case PHVOLT_T_BREAK:
 					/**
 					 * "Break" statement
 					 */
-					let compilation .= "<?php break; ?>";
+					let compilation .= "<?cpp break; ?>";
 					break;
 
 				case 321:
@@ -2315,6 +2315,7 @@ class Compiler implements InjectionAwareInterface
 			 */
 			return this->_blocks;
 		}
+
 		return compilation;
 	}
 
