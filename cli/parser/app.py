@@ -29,6 +29,8 @@
 
 from os import *
 from controller import *
+from view import *
+from jinja2 import *
 import template
 
 class App:
@@ -53,6 +55,7 @@ class App:
 		return listdir(root)
 
 	def compileController(self, root, module, bundle):
+		return
 		targetPath = path.join(root, module, bundle, 'controller')
 		destPath = path.join(self.buildSource, module, bundle, 'controller')
 		if not path.isdir(destPath):
@@ -69,20 +72,34 @@ class App:
 		destPath = path.join(self.buildSource, module, bundle, 'command')
 		if not path.isdir(destPath):
 			makedirs(destPath)
-		controller = Controller()
-		controller.setInput(targetPath) \
-				  .setOutput(destPath) \
-				  .setConfig(self.buildConfig) \
-				  .setTemplate(template) \
-				  .compile()
+		#controller = Controller()
+		#controller.setInput(targetPath) \
+		#		  .setOutput(destPath) \
+		#		  .setConfig(self.buildConfig) \
+		#		  .setTemplate(template) \
+		#		  .compile()
 
 	def compileProvider(self, root, module, bundle):
+		return
 		targetPath = path.join(root, module, bundle, 'provider')
 		destPath = path.join(self.buildSource, module, bundle, 'provider')
 		if not path.isdir(destPath):
 			makedirs(destPath)
 
 	def compileResource(self, root, module, bundle):
+		targetPath = path.join(root, module, bundle, 'resource', 'view')
+		destPath = path.join(self.buildSource, module, bundle, 'resource', 'view')
+		if not path.isdir(destPath):
+			makedirs(destPath)
+		template = Template('Hello {{ name }}!')
+		print template.render(name='John Doe')
+		return
+		view = View()
+		view.setInput(targetPath) \
+			.setOutput(destPath) \
+			.setMode(View.DEVELOPMENT) \
+			.compile()
+		return
 		targetPath = path.join(root, module, bundle, 'resource')
 		destPath = path.join(self.buildSource, module, bundle, 'resource')
 		if not path.isdir(destPath):
@@ -119,6 +136,7 @@ class App:
 		for bundle in bundles:
 			if path.isdir(path.join(root, module, bundle)):
 				self.compileBundle(root, module, bundle)
+				return
 
 	def parse(self):
 		modules = self.expandTree(self.module)
