@@ -315,7 +315,7 @@ class Compiler implements InjectionAwareInterface
 			 */
 			if variable == "loop" {
 				let level = this->_foreachLevel,
-					exprCode .= "$" . this->getUniquePrefix() . level . "loop",
+					exprCode .= "" . this->getUniquePrefix() . level . "loop",
 					this->_loopPointers[level] = level;
 			} else {
 
@@ -325,12 +325,12 @@ class Compiler implements InjectionAwareInterface
 				let dependencyInjector = this->_dependencyInjector;
 				if typeof dependencyInjector == "object" {
 					if dependencyInjector->has(variable) {
-						let exprCode .= "$this->" . variable;
+						let exprCode .= "this->" . variable;
 					} else {
-						let exprCode .= "$" . variable;
+						let exprCode .= "" . variable;
 					}
 				} else {
-					let exprCode .= "$" . variable;
+					let exprCode .= "" . variable;
 				}
 			}
 
@@ -1125,7 +1125,7 @@ class Compiler implements InjectionAwareInterface
 					break;
 
 				case PHVOLT_T_IDENTIFIER:
-					let exprCode = "$" . expr["value"];
+					let exprCode = expr["value"];
 					break;
 
 				case PHVOLT_T_AND:
@@ -1391,7 +1391,7 @@ class Compiler implements InjectionAwareInterface
 				}
 
 				if type == PHVOLT_T_ELSEFOR {
-					let compilation .= "<?cpp $" . prefixLevel . "iterated = false; ?>";
+					let compilation .= "<?cpp " . prefixLevel . "iterated = false; ?>";
 					let forElse = prefixLevel;
 					let this->_forElsePointers[level] = forElse;
 					break;
@@ -1411,15 +1411,15 @@ class Compiler implements InjectionAwareInterface
 		 * Generate the loop context for the "foreach"
 		 */
 		if isset loopContext[level] {
-			let compilation .= "<?cpp $" . prefixLevel . "iterator = " . exprCode . "; ";
-			let compilation .= "$" . prefixLevel . "incr = 0; ";
-			let compilation .= "$" . prefixLevel . "loop = new stdClass(); ";
-			let compilation .= "$" . prefixLevel . "loop->length = count($" . prefixLevel . "iterator); ";
-			let compilation .= "$" . prefixLevel . "loop->index = 1; ";
-			let compilation .= "$" . prefixLevel . "loop->index0 = 1; ";
-			let compilation .= "$" . prefixLevel . "loop->revindex = $" . prefixLevel . "loop->length; ";
-			let compilation .= "$" . prefixLevel . "loop->revindex0 = $" . prefixLevel . "loop->length - 1; ?>";
-			let iterator = "$" . prefixLevel . "iterator";
+			let compilation .= "<?cpp Interator " . prefixLevel . "iterator = " . exprCode . "; ";
+			let compilation .= "int " . prefixLevel . "incr = 0; ";
+			let compilation .= "Object " . prefixLevel . "loop = new Object; ";
+			let compilation .= "" . prefixLevel . "loop->length = len(" . prefixLevel . "iterator); ";
+			let compilation .= "" . prefixLevel . "loop->index = 1; ";
+			let compilation .= "" . prefixLevel . "loop->index0 = 1; ";
+			let compilation .= "" . prefixLevel . "loop->revindex = " . prefixLevel . "loop->length; ";
+			let compilation .= "" . prefixLevel . "loop->revindex0 = " . prefixLevel . "loop->length - 1; ?>";
+			let iterator = "" . prefixLevel . "iterator";
 		} else {
 			let iterator = exprCode;
 		}
@@ -1433,9 +1433,9 @@ class Compiler implements InjectionAwareInterface
 		 * Check if a "key" variable needs to be calculated
 		 */
 		if fetch key, statement["key"] {
-			let compilation .= "<?cpp foreach (" . iterator . " as $" . key . " => $" . variable . ") { ";
+			let compilation .= "<?cpp for (" . iterator . " : " . key . " => " . variable . ") { ";
 		} else {
-			let compilation .= "<?cpp foreach (" . iterator . " as $" . variable . ") { ";
+			let compilation .= "<?cpp for (" . iterator . " : " . variable . ") { ";
 		}
 
 		/**
@@ -1451,19 +1451,19 @@ class Compiler implements InjectionAwareInterface
 		 * Generate the loop context inside the cycle
 		 */
 		if isset loopContext[level] {
-			let compilation .= "<?cpp $" . prefixLevel . "loop->first = ($" . prefixLevel . "incr == 0); ";
-			let compilation .= "$" . prefixLevel . "loop->index = $" . prefixLevel . "incr + 1; ";
-			let compilation .= "$" . prefixLevel . "loop->index0 = $" . prefixLevel . "incr; ";
-			let compilation .= "$" . prefixLevel . "loop->revindex = $" . prefixLevel . "loop->length - $" . prefixLevel . "incr; ";
-			let compilation .= "$" . prefixLevel . "loop->revindex0 = $" . prefixLevel . "loop->length - ($" . prefixLevel . "incr + 1); ";
-			let compilation .= "$" . prefixLevel . "loop->last = ($" . prefixLevel . "incr == ($" . prefixLevel . "loop->length - 1)); ?>";
+			let compilation .= "<?cpp " . prefixLevel . "loop->first = (" . prefixLevel . "incr == 0); ";
+			let compilation .= "" . prefixLevel . "loop->index = $" . prefixLevel . "incr + 1; ";
+			let compilation .= "" . prefixLevel . "loop->index0 = $" . prefixLevel . "incr; ";
+			let compilation .= "" . prefixLevel . "loop->revindex = $" . prefixLevel . "loop->length - $" . prefixLevel . "incr; ";
+			let compilation .= "" . prefixLevel . "loop->revindex0 = $" . prefixLevel . "loop->length - ($" . prefixLevel . "incr + 1); ";
+			let compilation .= "" . prefixLevel . "loop->last = ($" . prefixLevel . "incr == ($" . prefixLevel . "loop->length - 1)); ?>";
 		}
 
 		/**
 		 * Update the forelse var if it"s iterated at least one time
 		 */
 		if typeof forElse == "string" {
-			let compilation .= "<?cpp $" . forElse . "iterated = true; ?>";
+			let compilation .= "<?cpp " . forElse . "iterated = true; ?>";
 		}
 
 		/**
@@ -1479,7 +1479,7 @@ class Compiler implements InjectionAwareInterface
 			let compilation .= "<?cpp } ?>";
 		} else {
 			if isset loopContext[level] {
-				let compilation .= "<?cpp $" . prefixLevel . "incr++; } ?>";
+				let compilation .= "<?cpp " . prefixLevel . "incr++; } ?>";
 			} else {
 				let compilation .= "<?cpp } ?>";
 			}
@@ -1500,9 +1500,9 @@ class Compiler implements InjectionAwareInterface
 		let level = this->_foreachLevel;
 		if fetch prefix, this->_forElsePointers[level] {
 			if isset this->_loopPointers[level] {
-				return "<?cpp $" . prefix . "incr++; } if (!$" . prefix . "iterated) { ?>";
+				return "<?cpp " . prefix . "incr++; } if (!" . prefix . "iterated) { ?>";
 			}
-			return "<?cpp } if (!$" . prefix . "iterated) { ?>";
+			return "<?cpp } if (!" . prefix . "iterated) { ?>";
 		}
 		return "";
 	}
@@ -1784,7 +1784,7 @@ class Compiler implements InjectionAwareInterface
 		 * Echo statement
 		 */
 		if this->_autoescape {
-			return "<?cpp $this->escaper->escapeHtml(" . exprCode . "); ?>";
+			return "<?cpp view->content += escape(str(" . exprCode . ")); ?>";
 		}
 
 		return "<?cpp view->content += str(" . exprCode . "); ?>";
@@ -1857,10 +1857,10 @@ class Compiler implements InjectionAwareInterface
 		 * Use partial
 		 */
 		if !fetch params, statement["params"] {
-			return "<?cpp $this->partial(" . path . "); ?>";
+			return "<?cpp this->partial(" . path . "); ?>";
 		}
 
-		return "<?cpp $this->partial(" . path . ", " . this->expression(params) . "); ?>";
+		return "<?cpp this->partial(" . path . ", " . this->expression(params) . "); ?>";
 	}
 
 	/**
