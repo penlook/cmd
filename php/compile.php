@@ -7,4 +7,4 @@ $compiler->setOptions(array(
 	"compiledExtension" => ".compiled"
 ));
 
-$compiler->compileFile('views/app.volt', 'views/app.cpp');
+$compiler->compileFile('views/app.volt', 'views/app.cpp.html');

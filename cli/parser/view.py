@@ -29,7 +29,6 @@
 
 import re      # Regular expression
 import os      # Operating system
-from jinja2 import *
 
 class View:
 

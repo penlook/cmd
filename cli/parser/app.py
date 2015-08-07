@@ -30,12 +30,13 @@
 from os import *
 from controller import *
 from view import *
-from jinja2 import *
-import template
+from template import *
+from volt import *
 
 class App:
-	
+
 	def __init__(self):
+		self.listFiles = []
 		pass
 
 	def setMode(self, mode):
@@ -53,6 +54,15 @@ class App:
 
 	def expandTree(self, root):
 		return listdir(root)
+
+	def expandTreeRecursive(self, root):
+		if path.isdir(root):
+			listFiles = self.expandTree(root)
+			for file in listFiles:
+				if path.isdir(path.join(root, file)):
+					self.expandTreeRecursive(path.join(root, file))
+				if path.isfile(path.join(root, file)):
+					self.listFiles += [path.join(root, file)]
 
 	def compileController(self, root, module, bundle):
 		return
@@ -87,12 +97,21 @@ class App:
 			makedirs(destPath)
 
 	def compileResource(self, root, module, bundle):
-		targetPath = path.join(root, module, bundle, 'resource', 'view')
-		destPath = path.join(self.buildSource, module, bundle, 'resource', 'view')
-		if not path.isdir(destPath):
-			makedirs(destPath)
-		template = Template('Hello {{ name }}!')
-		print template.render(name='John Doe')
+
+		# Compile volt template
+		viewTargetPath = path.join(root, module, bundle, 'resource', 'view')
+		viewDestPath = path.join(self.buildSource, module, bundle, 'resource', 'view')
+		if not path.isdir(viewDestPath):
+			makedirs(viewDestPath)
+		self.listFiles = []
+		volt = Volt()
+		templateFiles = self.expandTreeRecursive(viewTargetPath)
+		for templateFile in self.listFiles:
+			if not path.isdir(path.dirname(viewDestPath + templateFile[len(viewTargetPath):])):
+				makedirs(path.dirname(viewDestPath + templateFile[len(viewTargetPath):]))
+			destCompileFile = viewDestPath + templateFile[len(viewTargetPath):]
+			destCompileFile = destCompileFile.split(".")[0]
+			volt.compile(templateFile, destCompileFile + ".cpp.html")
 		return
 		view = View()
 		view.setInput(targetPath) \
