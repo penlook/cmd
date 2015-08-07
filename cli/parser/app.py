@@ -97,7 +97,6 @@ class App:
 			makedirs(destPath)
 
 	def compileResource(self, root, module, bundle):
-
 		# Compile volt template
 		viewTargetPath = path.join(root, module, bundle, 'resource', 'view')
 		viewDestPath = path.join(self.buildSource, module, bundle, 'resource', 'view')
@@ -112,17 +111,10 @@ class App:
 			destCompileFile = viewDestPath + templateFile[len(viewTargetPath):]
 			destCompileFile = destCompileFile.split(".")[0]
 			volt.compile(templateFile, destCompileFile + ".cpp.html")
-		return
-		view = View()
-		view.setInput(targetPath) \
-			.setOutput(destPath) \
-			.setMode(View.DEVELOPMENT) \
-			.compile()
-		return
-		targetPath = path.join(root, module, bundle, 'resource')
-		destPath = path.join(self.buildSource, module, bundle, 'resource')
-		if not path.isdir(destPath):
-			makedirs(destPath)
+		#targetPath = path.join(root, module, bundle, 'resource')
+		#destPath = path.join(self.buildSource, module, bundle, 'resource')
+		#if not path.isdir(destPath):
+		#	makedirs(destPath)
 
 	def compileTest(self, root, module, bundle):
 		targetPath = path.join(root, module, bundle, 'test')

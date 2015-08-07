@@ -62,7 +62,9 @@ void {{ fileName }}(View *view) {
 		cppEmbedded = "";
 		with open(cppHTMLPath, "r") as lines:
 			for line in lines:
-				cppEmbedded += line
+				line = line.strip()
+				if len(line) > 0:
+					cppEmbedded += line
 		cppEmbedded = "<?cpp ?>" + cppEmbedded
 		cppSegments = cppEmbedded.split("<?cpp")
 		cppContent = ""
@@ -73,7 +75,7 @@ void {{ fileName }}(View *view) {
 				cppContent += 'view->content += "' + cppArr[1].strip().replace('"', '\\"') + '";\n'
 		cppPath = cppHTMLPath.split(".html")[0]
 		cpp = open(cppPath, 'w')
-		cpp.write(self.renderString(templateCPP, { 'htmlContent' : cppContent }))
+		cpp.write(self.renderString(templateCPP, { 'htmlContent' : cppContent.strip() }))
 		cpp.close()
 		
 	def compile(self, target, dest):
