@@ -28,9 +28,9 @@
 # Application parser
 
 from os import *
-from controller import *
+from classCompiler import *
 from view import *
-from template import *
+import template
 from volt import *
 
 class App:
@@ -65,23 +65,29 @@ class App:
 					self.listFiles += [path.join(root, file)]
 
 	def compileController(self, root, module, bundle):
-		return
 		targetPath = path.join(root, module, bundle, 'controller')
 		destPath = path.join(self.buildSource, module, bundle, 'controller')
 		if not path.isdir(destPath):
 			makedirs(destPath)
-		controller = Controller()
-		controller.setInput(targetPath) \
+		compiler = ClassCompiler('controller')
+		compiler  .setInput(targetPath) \
 				  .setOutput(destPath) \
 				  .setConfig(self.buildConfig) \
 				  .setTemplate(template) \
 				  .compile()
+		# Get all variables in actions
+		self.viewData = compiler.viewData
 
 	def compileCommand(self, root, module, bundle):
 		targetPath = path.join(root, module, bundle, 'command')
 		destPath = path.join(self.buildSource, module, bundle, 'command')
 		if not path.isdir(destPath):
 			makedirs(destPath)
+		compiler = ClassCompiler('command')
+		compiler  .setInput(targetPath) \
+				  .setOutput(destPath) \
+				  .setConfig(self.buildConfig) \
+				  .compile()
 		#controller = Controller()
 		#controller.setInput(targetPath) \
 		#		  .setOutput(destPath) \
@@ -110,7 +116,14 @@ class App:
 				makedirs(path.dirname(viewDestPath + templateFile[len(viewTargetPath):]))
 			destCompileFile = viewDestPath + templateFile[len(viewTargetPath):]
 			destCompileFile = destCompileFile.split(".")[0]
-			volt.compile(templateFile, destCompileFile + ".cpp.html")
+			componentPath = templateFile[len(viewTargetPath):].split(".html")[0].split('/')[1:]
+			if len(componentPath) == 2:
+				# Controller view
+				if self.viewData.has_key(componentPath[0]):
+					# Action view
+					if self.viewData[componentPath[0]].has_key(componentPath[1]):
+						volt.setData(self.viewData[componentPath[0]][componentPath[1]])
+						volt.compile(templateFile, destCompileFile + ".cpp.html")
 		#targetPath = path.join(root, module, bundle, 'resource')
 		#destPath = path.join(self.buildSource, module, bundle, 'resource')
 		#if not path.isdir(destPath):

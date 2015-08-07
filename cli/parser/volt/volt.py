@@ -57,6 +57,7 @@ class Volt:
 namespace app {
 namespace view {
 void {{ fileName }}(View *view) {
+{{ variableHeader }}
 {{ htmlContent }}
 }\n}\n}"""
 		cppEmbedded = "";
@@ -75,9 +76,21 @@ void {{ fileName }}(View *view) {
 				cppContent += 'view->content += "' + cppArr[1].strip().replace('"', '\\"') + '";\n'
 		cppPath = cppHTMLPath.split(".html")[0]
 		cpp = open(cppPath, 'w')
-		cpp.write(self.renderString(templateCPP, { 'htmlContent' : cppContent.strip() }))
+		variableHeader = ""
+		for variable in self.getData():
+			variableHeader += variable['Type'] + ' ' + variable['Name'] + ' = view->getData()->get<' + variable['Type'] + '>("' + variable['Name'] + '");\n'
+		cpp.write(self.renderString(templateCPP, {
+			'htmlContent' : cppContent.strip(),
+			'variableHeader' : variableHeader.strip()
+		}))
 		cpp.close()
+
+	def setData(self, data):
+		self.data = data
 		
+	def getData(self):
+		return self.data
+
 	def compile(self, target, dest):
 		php = PHP("")
 		code = '(new Volt\Compiler())->compileFile'

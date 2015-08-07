@@ -40,32 +40,54 @@ def tab(times):
 		tabContent += '\t'
 	return tabContent
 
-class Controller:
+class ClassCompiler:
 
-	def __init__(self):
-		self.annotationInfo = {}
-		self.defaultAnnotation = {
-			'@Route': None,
-			'@Method': '*',
-			'@Type': 'HTML'
-		}
-
-	def initControllerParser(self):
+	def __init__(self, typeName):
+		self.typeName =  typeName
+		self.controller = False
+		self.command = False
+		self.model = False
+		self.initClassParser()
+		if typeName == 'controller':
+			self.controller = True
+			self.initControllerParser()
+		if typeName == 'command':
+			self.command = True
+			self.initCommandParser()
+		if typeName == 'model':
+			self.model = True
+			self.initModelParser()
+	
+	def initClassParser(self):
 		self.commentFlag = False
 		self.bracketFlag = 0
 		self.methodStack = {}
 		self.annotationStack = {}
 		self.lineStack = []
-		self.currentClass = None
-		self.currentClassFull = None
-		self.currentMethod = None
-		self.isAction = False
-
 		self.stackPublic = []
 		self.stackPrivate = []
 		self.stackProtected = []
 		self.stackNonAccessModifier = []
 		self.methodBlockContent = {}
+		self.annotationInfo = {}
+		self.currentClass = None
+		self.currentClassFull = None
+		self.currentMethod = None
+
+	def initCommandParser(self):
+		pass
+
+	def initModelParser(self):
+		pass
+
+	def initControllerParser(self):
+		self.defaultAnnotation = {
+			'@Route': None,
+			'@Method': '*',
+			'@Type': 'HTML'
+		}
+		self.viewData = {}
+		self.isAction = False
 
 	def setInput(self, targetDir):
 		self.Input = targetDir
@@ -84,6 +106,9 @@ class Controller:
 	def setConfig(self, configDir):
 		self.Config = configDir
 		return self
+
+	def getViewData(self):
+		return self.viewData
 
 	def parseSourceFile(self, sourcePath):
 		pass
@@ -164,11 +189,12 @@ class Controller:
 								break
 							indexR = indexR - 1
 						currentMethod = method_without_am[indexR : indexL]
-						self.currentMethod = currentMethod
+						self.currentMethod = currentMethod.strip()
 						#print currentMethod
 						self.methodStack[self.currentMethod] = {}
 						if self.isAction:
 							self.methodStack[self.currentMethod]["Header"] = "void " + className + "::" + currentMethod.strip() + '(ActionArgumentList args)'
+							self.viewData[self.currentClass.lower()][self.currentMethod.lower()] = []
 						else:
 							self.methodStack[self.currentMethod]["Header"] = method_without_am[0 : indexR] + " " + className + "::" + currentMethod.strip() + method_without_am[indexL:]
 						self.methodStack[self.currentMethod]["Block"] = ''
@@ -233,6 +259,7 @@ class Controller:
 						self.currentClassFull = class_without_bracket
 						self.annotationInfo[self.currentClass] = {'@': self.annotationStack, 'Method': []}
 						self.annotationStack = {}
+						self.viewData[self.currentClass.lower()] = {}
 						continue
 					if pattern.isTemplateVariable():
 						equal = self.line.index("=")
@@ -244,8 +271,11 @@ class Controller:
 						variableType = variable[bracketStart + 1 : bracketStop]
 						self.line = variableType + " " + variableName + ' ' + value + '\n';
 						self.line += 'this->getView()->getData()->set<' + variableType + '>("' + variableName + '", ' + variableName + ');'
-						print "NAME ", variableName
-						print "TYPE ", variableType
+						self.viewData[self.currentClass.lower()][self.currentMethod.lower()].append({
+							'Type': variableType,
+							'Name': variableName
+						})
+						#self.viewData[self.currentClass][self.currentMethod] += variableType + ' ' +variableName + ' = view->getData()->get<' + variableType + '>("' + variableName + '");\n'
 					if pattern.isMethodStart():
 						self.bracketFlag = 1
 						continue
@@ -267,7 +297,7 @@ class Controller:
 			exit()
 
 	def generateHeader(self):
-		self.headerContent += 'namespace app {\nnamespace controller {\n'
+		self.headerContent += 'namespace app {\nnamespace ' + self.typeName + ' {\n'
 		self.headerContent += self.currentClassFull + "\n{\n"
 		if len(self.stackPublic) > 0:
 			self.headerContent += '\tpublic:\n'
@@ -299,7 +329,7 @@ class Controller:
 		self.headerContent += "}\n}"
 
 	def generateSource(self):
-		self.cppContent += 'namespace app {\nnamespace controller {\n'
+		self.cppContent += 'namespace app {\nnamespace ' + self.typeName +' {\n'
 		for methodName in self.methodStack:
 			self.cppContent += self.methodStack[methodName]['Header'].rstrip('\n') + '\n'
 			self.cppContent += '{\n'
@@ -310,13 +340,13 @@ class Controller:
 
 	def compileFile(self, filePath):
 		fileName = filePath.split(".")[0]
-		self.controllerName = fileName.split("/")[-1]
+		self.className = fileName.split("/")[-1]
 		cppPath	   = self.Input + "/" + fileName + ".cpp"
 		destHeaderPath = self.Output + "/" + fileName + ".h"
 		destCppPath = self.Output + "/" + fileName + ".cpp"
-
+		# Include header in source file
 		self.headerContent = ''
-		self.cppContent = '#include "'+ self.controllerName + '.h"\n'
+		self.cppContent = '#include "'+ self.className + '.h"\n'
 		self.parseController(cppPath)
 		self.generateHeader()
 		self.generateSource()
@@ -446,10 +476,11 @@ location / {
 		nginx.write(configContent)
 
 	def compile(self):
-		controllers = os.listdir(self.Input)
-		for controller in controllers:
-			# Controller must have header file
-			if controller.endswith('.cpp'):
-				self.compileFile(controller)
+		# List all class files from input directory
+		classFiles = os.listdir(self.Input)
+		for classFile in classFiles:
+			if classFile.endswith('.cpp'):
+				# Compile cpp file
+				self.compileFile(classFile)
 		#self.generateNginxConfig()
 		#self.generateControllerActionMapping()
