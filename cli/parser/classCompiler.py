@@ -44,18 +44,18 @@ class ClassCompiler:
 
 	def __init__(self, typeName):
 		self.typeName =  typeName
-		self.controller = False
-		self.command = False
-		self.model = False
+		self.isController = False
+		self.isCommand = False
+		self.isModel = False
 		self.initClassParser()
 		if typeName == 'controller':
-			self.controller = True
+			self.isController = True
 			self.initControllerParser()
 		if typeName == 'command':
 			self.command = True
 			self.initCommandParser()
 		if typeName == 'model':
-			self.model = True
+			self.isModel = True
 			self.initModelParser()
 	
 	def initClassParser(self):
@@ -70,6 +70,8 @@ class ClassCompiler:
 		self.stackNonAccessModifier = []
 		self.methodBlockContent = {}
 		self.annotationInfo = {}
+		self.isClass = False
+		self.isAction = False
 		self.currentClass = None
 		self.currentClassFull = None
 		self.currentMethod = None
@@ -136,7 +138,7 @@ class ClassCompiler:
 						annotationArr = self.line.split(' ')
 						annotationName = annotationArr[0].strip()
 						annotationValue = ' '.join(annotationArr[1:])
-						if annotationName == '@Route':
+						if self.isController and annotationName == '@Route':
 							self.isAction = True
 						self.annotationStack[annotationName] = annotationValue
 						continue
@@ -147,10 +149,10 @@ class ClassCompiler:
 						if pattern.isPublic():
 							method_without_am = self.line.split('public')[1].strip()
 							method_without_am = method_without_am
-							if self.isAction:
+							if self.isController and self.isAction:
 								method_without_am = 'void '+ method_without_am
 							self.stackPublic.append(method_without_am)
-							if self.isAction:
+							if self.isController and self.isAction:
 								# Method as Action
 								action_without_am = method_without_am.split('(')[0] + "(ActionArgumentList)"
 								self.stackPublic.append(action_without_am)
@@ -158,10 +160,10 @@ class ClassCompiler:
 						if pattern.isPrivate():
 							method_without_am = self.line.split('private')[1].strip()
 							method_without_am = method_without_am
-							if self.isAction:
+							if self.isController and self.isAction:
 								method_without_am = 'void '+ method_without_am
 							self.stackPrivate.append(method_without_am)
-							if self.isAction:
+							if self.isController and self.isAction:
 								# Method as Action
 								action_without_am = method_without_am.split('(')[0] + "(ActionArgumentList)"
 								self.stackPrivate.append(action_without_am)
@@ -169,10 +171,10 @@ class ClassCompiler:
 						if pattern.isProtected():
 							method_without_am = self.line.split('protected')[1].strip()
 							method_without_am = method_without_am
-							if self.isAction:
+							if self.isController and self.isAction:
 								method_without_am = 'void '+ method_without_am
 							self.stackProtected.append(method_without_am)
-							if self.isAction:
+							if self.isController and self.isAction:
 								# Method as Action
 								action_without_am = method_without_am.split('(')[0] + "(ActionArgumentList)"
 								self.stackPrivate.append(action_without_am)
@@ -180,7 +182,6 @@ class ClassCompiler:
 						if am is False:
 							method_without_am = method_without_am
 							self.stackNonAccessModifier.append(method_without_am)
-
 						#print method_without_am
 						indexL = method_without_am.index('(')
 						indexR = indexL
@@ -192,11 +193,11 @@ class ClassCompiler:
 						self.currentMethod = currentMethod.strip()
 						#print currentMethod
 						self.methodStack[self.currentMethod] = {}
-						if self.isAction:
-							self.methodStack[self.currentMethod]["Header"] = "void " + className + "::" + currentMethod.strip() + '(ActionArgumentList args)'
+						if self.isController and self.isAction:
+							self.methodStack[self.currentMethod]["Header"] = "void " + self.currentClass + "::" + currentMethod.strip() + '(ActionArgumentList args)'
 							self.viewData[self.currentClass.lower()][self.currentMethod.lower()] = []
 						else:
-							self.methodStack[self.currentMethod]["Header"] = method_without_am[0 : indexR] + " " + className + "::" + currentMethod.strip() + method_without_am[indexL:]
+							self.methodStack[self.currentMethod]["Header"] = method_without_am[0 : indexR] + " " + self.currentClass + "::" + currentMethod.strip() + method_without_am[indexL:]
 						self.methodStack[self.currentMethod]["Block"] = ''
 						indexL = method_without_am.index('(')
 						indexR = method_without_am.index(')')
@@ -301,10 +302,19 @@ class ClassCompiler:
 		self.headerContent += self.currentClassFull + "\n{\n"
 		if len(self.stackPublic) > 0:
 			self.headerContent += '\tpublic:\n'
+		# Auto generate set get
+		if self.isModel:
+			if len(self.stackProtected) > 0:
+				for protectedItem in self.stackProtected:
+					propertyCom = protectedItem.split(",")[0].split(" ")
+					propertyType = propertyCom[0]
+					propertyName = propertyCom[1][:-1]
+					self.headerContent += "\t\tvoid set" + propertyName[0].upper() + propertyName[1:] + '(' + propertyType +' ' + propertyName + ');\n'
+					self.headerContent += "\t\t" + propertyType + ' get' + propertyName[0].upper() + propertyName[1:] + '();\n'
 		for publicItem in self.stackPublic:
 			self.headerContent += '\t\t' + publicItem.strip()
 			if not self.headerContent.endswith(';'):
-				self.headerContent += ";"
+				self.headerContent += ';'
 			self.headerContent += '\n'
 		if len(self.stackPrivate) > 0:
 			self.headerContent += '\tprivate:\n'

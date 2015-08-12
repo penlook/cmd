@@ -96,11 +96,16 @@ class App:
 		#		  .compile()
 
 	def compileProvider(self, root, module, bundle):
-		return
-		targetPath = path.join(root, module, bundle, 'provider')
-		destPath = path.join(self.buildSource, module, bundle, 'provider')
+		# Compile entity model
+		targetPath = path.join(root, module, bundle, 'provider', 'entity')
+		destPath = path.join(self.buildSource, module, bundle, 'provider', 'entity')
 		if not path.isdir(destPath):
 			makedirs(destPath)
+		compiler = ClassCompiler('model')
+		compiler  .setInput(targetPath) \
+				  .setOutput(destPath) \
+				  .setConfig(self.buildConfig) \
+				  .compile()
 
 	def compileResource(self, root, module, bundle):
 		# Compile volt template
