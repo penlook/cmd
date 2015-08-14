@@ -33,6 +33,7 @@ import pprint
 import hashlib
 from pattern import *
 import pprint
+import re
 
 def tab(times):
 	tabContent = '\n'
@@ -62,6 +63,7 @@ class ClassCompiler:
 		self.commentFlag = False
 		self.bracketFlag = 0
 		self.methodStack = {}
+		self.constantStack = []
 		self.annotationStack = {}
 		self.lineStack = []
 		self.stackPublic = []
@@ -142,6 +144,13 @@ class ClassCompiler:
 							self.isAction = True
 						self.annotationStack[annotationName] = annotationValue
 						continue
+					if pattern.isConstant():
+						constCom = re.compile("[\s]+").split(self.line)
+						self.constantStack.append({
+							'@Type' : constCom[1],
+							'@Name' : constCom[2],
+							'@Value': constCom[4]
+						})
 					if pattern.isMethod() and self.bracketFlag == 0:
 						# Default
 						method_without_am = self.line
@@ -299,18 +308,26 @@ class ClassCompiler:
 
 	def generateHeader(self):
 		self.headerContent += 'namespace app {\nnamespace ' + self.typeName + ' {\n'
-		self.headerContent += self.currentClassFull + "\n{\n"
-		if len(self.stackPublic) > 0:
+		self.headerContent += self.currentClassFull + "\n{\n"		
+		if len(self.stackPublic) > 0 or len(self.constantStack) > 0:
 			self.headerContent += '\tpublic:\n'
+		# Generate constant
+		for const in self.constantStack:
+			self.headerContent += '\t\tconst ' + const['@Type'] + ' ' + const['@Name'] + ';\n'
 		# Auto generate set get
+		print self.stackPublic
 		if self.isModel:
 			if len(self.stackProtected) > 0:
 				for protectedItem in self.stackProtected:
 					propertyCom = protectedItem.split(",")[0].split(" ")
 					propertyType = propertyCom[0]
 					propertyName = propertyCom[1][:-1]
-					self.headerContent += "\t\tvoid set" + propertyName[0].upper() + propertyName[1:] + '(' + propertyType +' ' + propertyName + ');\n'
-					self.headerContent += "\t\t" + propertyType + ' get' + propertyName[0].upper() + propertyName[1:] + '();\n'
+					propertyMethodSet = self.currentClass + " set" + propertyName[0].upper() + propertyName[1:] + '(' + propertyType +' ' + propertyName + ');'
+					propertyMethodGet = propertyType + ' get' + propertyName[0].upper() + propertyName[1:] + '();'
+					if not propertyMethodSet in self.stackPublic:
+						self.headerContent += "\t\t" + self.currentClass + " *set" + propertyName[0].upper() + propertyName[1:] + '(' + propertyType +' ' + propertyName + ');\n'
+					if not propertyMethodGet in self.stackPublic:
+						self.headerContent += "\t\t" + propertyType + ' get' + propertyName[0].upper() + propertyName[1:] + '();\n'
 		for publicItem in self.stackPublic:
 			self.headerContent += '\t\t' + publicItem.strip()
 			if not self.headerContent.endswith(';'):
@@ -340,6 +357,10 @@ class ClassCompiler:
 
 	def generateSource(self):
 		self.cppContent += 'namespace app {\nnamespace ' + self.typeName +' {\n'
+		# Generate source constant
+		for const in self.constantStack:
+			self.cppContent += 'const ' + const['@Type'] + ' ' + self.currentClass + '::' + const['@Name'] + ' = ' + const['@Value'] + '\n'
+		# Generate source
 		for methodName in self.methodStack:
 			self.cppContent += self.methodStack[methodName]['Header'].rstrip('\n') + '\n'
 			self.cppContent += '{\n'
