@@ -82,7 +82,7 @@ class ClassCompiler:
 		pass
 
 	def initModelParser(self):
-		pass
+		self.ignoreModelProperties = []
 
 	def initControllerParser(self):
 		self.defaultAnnotation = {
@@ -306,6 +306,7 @@ class ClassCompiler:
 			print 'Controller class does not exist !'
 			exit()
 
+	# Generate C++ class header
 	def generateHeader(self):
 		self.headerContent += 'namespace app {\nnamespace ' + self.typeName + ' {\n'
 		self.headerContent += self.currentClassFull + "\n{\n"		
@@ -315,20 +316,33 @@ class ClassCompiler:
 		for const in self.constantStack:
 			self.headerContent += '\t\tconst ' + const['@Type'] + ' ' + const['@Name'] + ';\n'
 		# Auto generate set get
-		print self.stackPublic
 		if self.isModel:
 			if len(self.stackProtected) > 0:
 				for protectedItem in self.stackProtected:
 					propertyCom = protectedItem.split(",")[0].split(" ")
 					propertyType = propertyCom[0]
 					propertyName = propertyCom[1][:-1]
-					propertyMethodSet = self.currentClass + " set" + propertyName[0].upper() + propertyName[1:] + '(' + propertyType +' ' + propertyName + ');'
-					propertyMethodGet = propertyType + ' get' + propertyName[0].upper() + propertyName[1:] + '();'
-					if not propertyMethodSet in self.stackPublic:
-						self.headerContent += "\t\t" + self.currentClass + " *set" + propertyName[0].upper() + propertyName[1:] + '(' + propertyType +' ' + propertyName + ');\n'
-					if not propertyMethodGet in self.stackPublic:
-						self.headerContent += "\t\t" + propertyType + ' get' + propertyName[0].upper() + propertyName[1:] + '();\n'
+					self.headerContent += "\t\t" + self.currentClass + " *set" + propertyName[0].upper() + propertyName[1:] + '(' + propertyType +' ' + propertyName + ');\n'
+					self.headerContent += "\t\t" + propertyType + ' get' + propertyName[0].upper() + propertyName[1:] + '();\n'
 		for publicItem in self.stackPublic:
+			ignored = False
+			if self.isModel:
+				for protectedItem in self.stackProtected:
+					propertyCom = protectedItem.split(",")[0].split(" ")
+					propertyType = propertyCom[0]
+					propertyName = propertyCom[1][:-1]
+					overrideMethodSet = self.currentClass + " set" + propertyName[0].upper() + propertyName[1:] + '(' + propertyType +' ' + propertyName + ')'
+					if overrideMethodSet == publicItem :
+						ignored = True
+						self.ignoreModelProperties.append('set' + propertyName[0].upper() + propertyName[1:])
+						break
+					overrideMethodGet = propertyType + " get" + propertyName[0].upper() + propertyName[1:] + '()'
+					if overrideMethodGet == publicItem :
+						ignored = True
+						self.ignoreModelProperties.append('get' + propertyName[0].upper() + propertyName[1:])
+						break
+			if ignored:
+				continue
 			self.headerContent += '\t\t' + publicItem.strip()
 			if not self.headerContent.endswith(';'):
 				self.headerContent += ';'
@@ -360,6 +374,24 @@ class ClassCompiler:
 		# Generate source constant
 		for const in self.constantStack:
 			self.cppContent += 'const ' + const['@Type'] + ' ' + self.currentClass + '::' + const['@Name'] + ' = ' + const['@Value'] + '\n'
+		
+		if self.isModel:
+			for protectedItem in self.stackProtected:
+				propertyCom = protectedItem.split(",")[0].split(" ")
+				propertyType = propertyCom[0]
+				propertyName = propertyCom[1][:-1]
+				methodSet = 'set' + propertyName[0].upper() + propertyName[1:]
+				methodGet = 'get' + propertyName[0].upper() + propertyName[1:]
+				if methodSet not in self.methodStack:
+					self.methodStack[methodSet] = {}
+					self.methodStack[methodSet]['Header'] = self.currentClass + ' *' + self.currentClass + '::' + methodSet + '(' + propertyType + ' ' + propertyName + ')'
+					self.methodStack[methodSet]['Block'] = 'this->' + propertyName + ' = ' + propertyName + ';\nreturn this;'
+					self.methodStack[methodSet]['ArgDeclaration'] = ''
+				if methodGet not in self.methodStack:
+					self.methodStack[methodGet] = {}
+					self.methodStack[methodGet]['Header'] = propertyType + ' ' + self.currentClass + '::' + methodGet + '()'
+					self.methodStack[methodGet]['Block'] = 'return this->' + propertyName + ';'
+					self.methodStack[methodGet]['ArgDeclaration'] = ''
 		# Generate source
 		for methodName in self.methodStack:
 			self.cppContent += self.methodStack[methodName]['Header'].rstrip('\n') + '\n'
