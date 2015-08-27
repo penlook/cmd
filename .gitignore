@@ -1,8 +1,10 @@
 *.pyc
 
 build
-/dist
-/pen.egg-info
+dist
+pen.egg-info
 /php/volt/.temp
 /php/volt/compile.log
 /php/volt/compile-errors.log
+/dist
+/pen.egg-info
