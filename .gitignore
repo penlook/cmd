@@ -4,3 +4,5 @@ build
 /dist
 /pen.egg-info
 /php/volt/.temp
+/php/volt/compile.log
+/php/volt/compile-errors.log
