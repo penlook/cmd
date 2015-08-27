@@ -36,8 +36,9 @@ from volt import *
 class App:
 
 	def __init__(self):
-		self.listFiles = []
-		pass
+		self.listFiles  = []
+		self.viewStack  = []
+		self.includeLib = {}
 
 	def setMode(self, mode):
 		self.mode = mode
@@ -77,7 +78,8 @@ class App:
 				  .setTemplate(template) \
 				  .compile()
 		# Get all variables in actions
-		self.viewData = compiler.viewData
+		self.viewData   = compiler.viewData
+		self.includeLib = compiler.includeAll
 
 	def compileCommand(self, root, module, bundle):
 		targetPath = path.join(root, module, bundle, 'command')
@@ -119,13 +121,25 @@ class App:
 			destCompileFile = viewDestPath + templateFile[len(viewTargetPath):]
 			destCompileFile = destCompileFile.split(".")[0]
 			componentPath = templateFile[len(viewTargetPath):].split(".html")[0].split('/')[1:]
+			controllerName = componentPath[0]
+			viewHeader = '#include "view/view.h"\n'
+			if self.includeLib.has_key(controllerName):
+				for include in self.includeLib[controllerName]:
+					viewHeader += include + '\n'
+			funcName = module + '_' + bundle  + '_' + '_'.join(componentPath)
+			self.viewStack.append(funcName);
 			if len(componentPath) == 2:
 				# Controller view
 				if self.viewData.has_key(componentPath[0]):
 					# Action view
 					if self.viewData[componentPath[0]].has_key(componentPath[1]):
-						volt.setData(self.viewData[componentPath[0]][componentPath[1]])
+						volt.setData({
+							"variables" : self.viewData[componentPath[0]][componentPath[1]],
+							"viewHeader" : viewHeader,
+							"funcName": funcName
+						})
 						volt.compile(templateFile, destCompileFile + ".cpp.html")
+						os.remove(destCompileFile + ".cpp.html")
 		#targetPath = path.join(root, module, bundle, 'resource')
 		#destPath = path.join(self.buildSource, module, bundle, 'resource')
 		#if not path.isdir(destPath):
@@ -164,9 +178,18 @@ class App:
 				self.compileBundle(root, module, bundle)
 				return
 
+	def generateViewHeader(self):
+		viewHeaderDir = self.buildSource + '/view'
+		if not path.isdir(viewHeaderDir):
+			makedirs(viewHeaderDir)
+		volt = Volt()
+		volt.generateHeader(viewHeaderDir, self.viewStack)
+
 	def parse(self):
 		modules = self.expandTree(self.module)
 		for module in modules:
 			if module.startswith("_cpp_"):
 				if path.isdir(path.join(self.module, module)):
 					self.compileModule(self.module, module)
+		self.generateViewHeader()
+		

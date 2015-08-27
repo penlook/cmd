@@ -61,6 +61,11 @@ class Pattern:
 		if self.match is not None:
 			return True
 		return False
+	
+	def isInclude(self):
+		if self.context.line.startswith("#include"):
+			return True
+		return False
 
 	def isHeader(self):
 		if self.context.line.startswith("#include"):

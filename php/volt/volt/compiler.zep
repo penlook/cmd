@@ -348,7 +348,13 @@ class Compiler implements InjectionAwareInterface
 		let right = expr["right"];
 
 		if right["type"] == PHVOLT_T_IDENTIFIER {
-			let exprCode .= right["value"];
+			// LOINT
+			var rightValue;
+			let rightValue = right["value"];
+			if ctype_alpha(rightValue) {
+				let rightValue = "get" . ucfirst(rightValue) . "()";
+			}
+			let exprCode .= rightValue;
 		} else {
 			let exprCode .= this->expression(right);
 		}
@@ -1784,10 +1790,10 @@ class Compiler implements InjectionAwareInterface
 		 * Echo statement
 		 */
 		if this->_autoescape {
-			return "<?cpp view->content += escape(str(" . exprCode . ")); ?>";
+			return "<?cpp view->stream += escape(str(" . exprCode . ")); ?>";
 		}
 
-		return "<?cpp view->content += str(" . exprCode . "); ?>";
+		return "<?cpp view->stream += str(" . exprCode . "); ?>";
 	}
 
 	/**

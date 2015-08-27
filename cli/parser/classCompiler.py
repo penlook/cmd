@@ -58,9 +58,10 @@ class ClassCompiler:
 		if typeName == 'model':
 			self.isModel = True
 			self.initModelParser()
-	
+
 	def initBundleParser(self):
 		self.namespace = []
+		self.includeAll = {}
 
 	def initClassParser(self):
 		self.commentFlag = False
@@ -80,6 +81,7 @@ class ClassCompiler:
 		self.currentClass = None
 		self.currentClassFull = None
 		self.currentMethod = None
+		self.includes = []
 
 	def initCommandParser(self):
 		pass
@@ -141,6 +143,8 @@ class ClassCompiler:
 					if pattern.isComment():
 						continue
 					if pattern.isHeader():
+						if pattern.isInclude():
+							self.includes.append(self.line)
 						self.headerContent += self.line + "\n"
 						continue
 					if pattern.isAnnotation():
@@ -271,7 +275,6 @@ class ClassCompiler:
 							self.stackNonAccessModifier.append(property_without_am.strip())
 						continue
 					if pattern.isClass():
-						print line
 						class_without_bracket = self.line
 						if pattern.isEndWithBracket():
 							class_without_bracket = self.line.split('{')[0]
@@ -281,17 +284,21 @@ class ClassCompiler:
 						self.annotationInfo[self.currentClass] = {'@': self.annotationStack, 'Method': []}
 						self.annotationStack = {}
 						self.viewData[self.currentClass.lower()] = {}
+						if self.isController:
+							self.includeAll[className.lower()] = self.includes
 						continue
 					if pattern.isTemplateVariable():
 						equal = self.line.index("=")
 						variable = self.line[:equal]
-						value = self.line[equal:]
+						value = self.line[equal + 1:].replace(";", '').strip()
 						bracketStart = variable.index("<")
 						bracketStop  = variable.index(">")
-						variableName = variable[:bracketStart]
+						variableName = variable[:bracketStart].strip()
 						variableType = variable[bracketStart + 1 : bracketStop]
-						self.line = variableType + " " + variableName + ' ' + value + '\n';
-						self.line += 'this->getView()->getData()->set<' + variableType + '>("' + variableName + '", ' + variableName + ');'
+						declaration = ''
+						if value != variableName:
+							declaration = variableType + " " + variableName + ' = ' + value + ';\n';
+						self.line = declaration + 'this->getView()->getData()->set<' + variableType + '>("' + variableName + '", ' + variableName + ');'
 						self.viewData[self.currentClass.lower()][self.currentMethod.lower()].append({
 							'Type': variableType,
 							'Name': variableName

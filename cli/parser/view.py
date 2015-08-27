@@ -142,6 +142,9 @@ view->setContent(join((char**) html,"\\n"));
 		})
 		#for folderPath in self.listFolderPath:
 		headerPath = self.Output + '/view.h'
+		print headerPath
+		exit(0)
+		
 		header = open(headerPath, 'w')
 		header.write(viewH)
 		header.close()

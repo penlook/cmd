@@ -53,10 +53,10 @@ class Volt:
 
 	def compileAll(self, cppHTMLPath):
 		templateCPP = """// AUTO GENERATED
-#include "view/view.h"
+{{ viewHeader }}
 namespace app {
 namespace view {
-void {{ fileName }}(View *view) {
+void {{ funcName }}(View *view) {
 {{ variableHeader }}
 {{ htmlContent }}
 }\n}\n}"""
@@ -73,15 +73,17 @@ void {{ fileName }}(View *view) {
 			cppArr = cppSegment.split("?>");
 			cppContent += cppArr[0].strip() + '\n';
 			if len(cppArr) == 2:
-				cppContent += 'view->content += "' + cppArr[1].strip().replace('"', '\\"') + '";\n'
+				cppContent += 'view->stream += "' + cppArr[1].strip().replace('"', '\\"') + '";\n'
 		cppPath = cppHTMLPath.split(".html")[0]
 		cpp = open(cppPath, 'w')
 		variableHeader = ""
-		for variable in self.getData():
+		for variable in self.getData()["variables"]:
 			variableHeader += variable['Type'] + ' ' + variable['Name'] + ' = view->getData()->get<' + variable['Type'] + '>("' + variable['Name'] + '");\n'
 		cpp.write(self.renderString(templateCPP, {
 			'htmlContent' : cppContent.strip(),
-			'variableHeader' : variableHeader.strip()
+			'variableHeader' : variableHeader.strip(),
+			'viewHeader' : self.data["viewHeader"],
+			'funcName' : self.data["funcName"]
 		}))
 		cpp.close()
 
@@ -90,6 +92,24 @@ void {{ fileName }}(View *view) {
 		
 	def getData(self):
 		return self.data
+
+	def generateHeader(self, viewPath, viewStack):
+		viewHeaderTemplate = """// AUTO GENERATED
+#include <sys/type.h>
+#include <sys/func.h>
+#include <app/view.h>
+namespace app {
+namespace view {
+{{ headerContent }}
+}\n}"""
+		cpp = open(viewPath + "/view.h", 'w')
+		headerContent = ''
+		for viewHeader in viewStack:
+			headerContent += 'void ' + viewHeader + "(View *view);\n"
+		cpp.write(self.renderString(viewHeaderTemplate, {
+			'headerContent' : headerContent
+		}))
+		cpp.close()
 
 	def compile(self, target, dest):
 		php = PHP("")
