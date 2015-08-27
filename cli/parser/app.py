@@ -32,6 +32,7 @@ from classCompiler import *
 from view import *
 import template
 from volt import *
+import shutil
 
 class App:
 
@@ -49,7 +50,7 @@ class App:
 		self.module  = root + '/src'
 		self.build   = root + '/gen'
 		self.service = root + '/service'
-		self.buildSource = self.build + '/module'
+		self.buildSource = self.build + '/container'
 		self.buildConfig = self.build + '/app/config'
 		return self
 
@@ -185,11 +186,18 @@ class App:
 		volt = Volt()
 		volt.generateHeader(viewHeaderDir, self.viewStack)
 
-	def parse(self):
+	def compileSource(self):
 		modules = self.expandTree(self.module)
 		for module in modules:
 			if module.startswith("_cpp_"):
 				if path.isdir(path.join(self.module, module)):
+					shutil.rmtree(path.join(self.buildSource, module))
 					self.compileModule(self.module, module)
 		self.generateViewHeader()
-		
+
+	def compileConfig(self):
+		pass
+
+	def parse(self):
+		self.compileSource()
+		self.compileConfig()

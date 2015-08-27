@@ -44,31 +44,11 @@ class Run(argparse.Action):
 		system("pkill pendev && service nginx stop")
 		system("fuser -k 80/tcp")
 
-	def compileView(self):
-		print 'Template - Starting complie ...'
-		view = View()
-		view.setInput(self.root + "/module/home/user/resource/view") \
-			.setOutput(self.root + "/build/app/view") \
-			.setMode(View.DEVELOPMENT) \
-			.compile()
-		print 'Template - Done.'
-
-	def compileController(self):
-		print 'Controller - Starting complie ...'
-		controller = Controller()
-		controller.setInput(self.root + "/module/home/user/controller") \
-				  .setOutput(self.root + "/build/app/controller") \
-				  .setConfig(self.root + "/build/app/config") \
-				  .compile()
-		print 'Controller - Done.'
-
 	def parse(self):
 		app = App()
 		app.setRoot(self.root)\
 		   .parse()
-		system("cd ../module && make")
-		#self.compileView()
-		#self.compileController()
+		system("cd ../container && make")
 
 	def build(self):
 		system("./build.sh")

@@ -1,3 +1,6 @@
 *.pyc
 
 build
+/dist
+/pen.egg-info
+/php/volt/.temp
