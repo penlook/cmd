@@ -36,7 +36,7 @@ class Build(argparse.Action):
 	
 	def prepare(self):
 		system("pkill pendev")
-		self.cwd += '/build/production'
+		self.cwd += '/build/_production'
 		chdir(self.cwd)
 		# Clean up system
 		system("sync && echo 3 > /proc/sys/vm/drop_caches")

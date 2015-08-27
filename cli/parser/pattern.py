@@ -31,9 +31,9 @@ import os
 class Pattern:
 
 	ANNOTATION   		= '\\@[A-Z]{1}[a-zA-Z0-9]+[\\s]+[\\w\\/\\:\"\\s]+'
-	CLASS        		= '^class[\s]+[a-zA-Z0-9\s]+(:[a-zA-Z0-9\s]+)'
+	CLASS        		= '^class[\s]+[a-zA-Z0-9\s]+'
 	CONSTANT			= '^const[\s]+[a-zA-Z]+[\s]+[A-Z0-9_]+[\s]+\=[\w\s]+\;'
-	PROPERTY     		= '^[a-z\s]+[a-zA-Z]+(\;|([a-zA-Z0-9\s=&]+\;))'
+	PROPERTY     		= '^[a-z\s]+[a-zA-Z]+(\;|([a-zA-Z0-9*\s=&]+\;))'
 	METHOD       		= '^[a-z\s]+[a-zA-Z]+\(|([\a-zA-Z0-9\*\&\s,=]+)\)'
 	TEMPLATE_VAR 		= '^[a-zA-Z_]+\<[a-zA-Z\s\*]+\>\s+\=[a-zA-Z0-9\s\"]+\;'
 	COMMENT			    = '^\/\/.+'

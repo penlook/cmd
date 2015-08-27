@@ -48,7 +48,7 @@ class ClassCompiler:
 		self.isController = False
 		self.isCommand = False
 		self.isModel = False
-		self.initClassParser()
+		self.initBundleParser()
 		if typeName == 'controller':
 			self.isController = True
 			self.initControllerParser()
@@ -59,6 +59,9 @@ class ClassCompiler:
 			self.isModel = True
 			self.initModelParser()
 	
+	def initBundleParser(self):
+		self.namespace = []
+
 	def initClassParser(self):
 		self.commentFlag = False
 		self.bracketFlag = 0
@@ -110,6 +113,10 @@ class ClassCompiler:
 	def setConfig(self, configDir):
 		self.Config = configDir
 		return self
+	
+	def setNamespace(self, namespace):
+		self.namespace = namespace
+		return self
 
 	def getViewData(self):
 		return self.viewData
@@ -152,14 +159,13 @@ class ClassCompiler:
 							'@Value': constCom[4]
 						})
 					if pattern.isMethod() and self.bracketFlag == 0:
-						# Default
 						method_without_am = self.line
 						am = False
 						if pattern.isPublic():
 							method_without_am = self.line.split('public')[1].strip()
 							method_without_am = method_without_am
-							if self.isController and self.isAction:
-								method_without_am = 'void '+ method_without_am
+							if len(method_without_am[:method_without_am.index("(")].split(" ")) == 1:
+									method_without_am = 'void '+ method_without_am
 							self.stackPublic.append(method_without_am)
 							if self.isController and self.isAction:
 								# Method as Action
@@ -198,15 +204,19 @@ class ClassCompiler:
 							if method_without_am[indexR] == ' ':
 								break
 							indexR = indexR - 1
-						currentMethod = method_without_am[indexR : indexL]
+						currentMethod = method_without_am[indexR : indexL].strip()
+						pointer = ''
+						if currentMethod[0] == '*':
+							pointer = '*'
+							currentMethod = currentMethod[1:]
 						self.currentMethod = currentMethod.strip()
-						#print currentMethod
 						self.methodStack[self.currentMethod] = {}
+						self.viewData[self.currentClass.lower()][self.currentMethod.lower()] = []
 						if self.isController and self.isAction:
-							self.methodStack[self.currentMethod]["Header"] = "void " + self.currentClass + "::" + currentMethod.strip() + '(ActionArgumentList args)'
+							self.methodStack[self.currentMethod]["Header"] = "void " + pointer + self.currentClass + "::" + currentMethod.strip() + '(ActionArgumentList args)'
 							self.viewData[self.currentClass.lower()][self.currentMethod.lower()] = []
 						else:
-							self.methodStack[self.currentMethod]["Header"] = method_without_am[0 : indexR] + " " + self.currentClass + "::" + currentMethod.strip() + method_without_am[indexL:]
+							self.methodStack[self.currentMethod]["Header"] = method_without_am[0 : indexR] + ' ' + pointer + self.currentClass + "::" + currentMethod.strip() + method_without_am[indexL:]
 						self.methodStack[self.currentMethod]["Block"] = ''
 						indexL = method_without_am.index('(')
 						indexR = method_without_am.index(')')
@@ -261,6 +271,7 @@ class ClassCompiler:
 							self.stackNonAccessModifier.append(property_without_am.strip())
 						continue
 					if pattern.isClass():
+						print line
 						class_without_bracket = self.line
 						if pattern.isEndWithBracket():
 							class_without_bracket = self.line.split('{')[0]
@@ -308,13 +319,14 @@ class ClassCompiler:
 
 	# Generate C++ class header
 	def generateHeader(self):
-		self.headerContent += 'namespace app {\nnamespace ' + self.typeName + ' {\n'
+		for namespace in self.namespace:
+			self.headerContent = self.headerContent + 'namespace ' + namespace + " {\n"
 		self.headerContent += self.currentClassFull + "\n{\n"		
 		if len(self.stackPublic) > 0 or len(self.constantStack) > 0:
 			self.headerContent += '\tpublic:\n'
 		# Generate constant
 		for const in self.constantStack:
-			self.headerContent += '\t\tconst ' + const['@Type'] + ' ' + const['@Name'] + ';\n'
+			self.headerContent += '\t\tstatic const ' + const['@Type'] + ' ' + const['@Name'] + ';\n'
 		# Auto generate set get
 		if self.isModel:
 			if len(self.stackProtected) > 0:
@@ -322,24 +334,34 @@ class ClassCompiler:
 					propertyCom = protectedItem.split(",")[0].split(" ")
 					propertyType = propertyCom[0]
 					propertyName = propertyCom[1][:-1]
-					self.headerContent += "\t\t" + self.currentClass + " *set" + propertyName[0].upper() + propertyName[1:] + '(' + propertyType +' ' + propertyName + ');\n'
-					self.headerContent += "\t\t" + propertyType + ' get' + propertyName[0].upper() + propertyName[1:] + '();\n'
+					propertyVar = propertyName
+					pointer = ''
+					if propertyName[0] == '*':
+						propertyName = propertyName[1:]
+						pointer = '*'
+					self.headerContent += "\t\t" + self.currentClass + ' *set' + propertyName[0].upper() + propertyName[1:] + '(' + propertyType +' ' + propertyVar + ');\n'
+					self.headerContent += "\t\t" + propertyType + ' ' + pointer + 'get' + propertyName[0].upper() + propertyName[1:] + '();\n'
 		for publicItem in self.stackPublic:
 			ignored = False
 			if self.isModel:
 				for protectedItem in self.stackProtected:
-					propertyCom = protectedItem.split(",")[0].split(" ")
+					propertyCom  = protectedItem.split(",")[0].split(" ")
 					propertyType = propertyCom[0]
-					propertyName = propertyCom[1][:-1]
-					overrideMethodSet = self.currentClass + " set" + propertyName[0].upper() + propertyName[1:] + '(' + propertyType +' ' + propertyName + ')'
+					propertyName = propertyCom[1][:-1].strip()
+					propertyVar  = propertyName
+					pointer = ''
+					if propertyName[0] == '*':
+						propertyName = propertyName[1:]
+						pointer = '*'
+					overrideMethodSet = self.currentClass + ' ' + '*set' + propertyName[0].upper() + propertyName[1:] + '(' + propertyType +' ' + propertyVar + ')'
 					if overrideMethodSet == publicItem :
 						ignored = True
-						self.ignoreModelProperties.append('set' + propertyName[0].upper() + propertyName[1:])
+						self.ignoreModelProperties.append(pointer + 'set' + propertyName[0].upper() + propertyName[1:])
 						break
-					overrideMethodGet = propertyType + " get" + propertyName[0].upper() + propertyName[1:] + '()'
+					overrideMethodGet = propertyType + ' ' + pointer + 'get' + propertyName[0].upper() + propertyName[1:] + '()'
 					if overrideMethodGet == publicItem :
 						ignored = True
-						self.ignoreModelProperties.append('get' + propertyName[0].upper() + propertyName[1:])
+						self.ignoreModelProperties.append(pointer + 'get' + propertyName[0].upper() + propertyName[1:])
 						break
 			if ignored:
 				continue
@@ -367,31 +389,45 @@ class ClassCompiler:
 				self.headerContent += ';'
 			self.headerContent += '\n'
 		self.headerContent += '};\n'
-		self.headerContent += "}\n}"
+		for namespace in self.namespace:
+			self.headerContent = self.headerContent + '}\n'
+		self.headerContent = self.headerContent + 'using '
+		for namespace in self.namespace:
+			 self.headerContent += namespace + "::"
+		self.headerContent = self.headerContent + self.currentClass + ';\n'
 
 	def generateSource(self):
-		self.cppContent += 'namespace app {\nnamespace ' + self.typeName +' {\n'
+		for namespace in self.namespace:
+			self.cppContent = self.cppContent + 'namespace ' + namespace + " {\n"
 		# Generate source constant
 		for const in self.constantStack:
 			self.cppContent += 'const ' + const['@Type'] + ' ' + self.currentClass + '::' + const['@Name'] + ' = ' + const['@Value'] + '\n'
-		
 		if self.isModel:
 			for protectedItem in self.stackProtected:
 				propertyCom = protectedItem.split(",")[0].split(" ")
 				propertyType = propertyCom[0]
-				propertyName = propertyCom[1][:-1]
+				propertyName = propertyCom[1][:-1].strip()
+				pointer = ''
+				propertyVar = propertyName
+				if propertyName[0] == '*':
+					propertyName = propertyName[1:]
+					pointer = '*'
 				methodSet = 'set' + propertyName[0].upper() + propertyName[1:]
 				methodGet = 'get' + propertyName[0].upper() + propertyName[1:]
 				if methodSet not in self.methodStack:
 					self.methodStack[methodSet] = {}
-					self.methodStack[methodSet]['Header'] = self.currentClass + ' *' + self.currentClass + '::' + methodSet + '(' + propertyType + ' ' + propertyName + ')'
+					self.methodStack[methodSet]['Header'] = self.currentClass + ' *' + self.currentClass + '::' + methodSet + '(' + propertyType + ' ' + propertyVar + ')'
 					self.methodStack[methodSet]['Block'] = 'this->' + propertyName + ' = ' + propertyName + ';\nreturn this;'
 					self.methodStack[methodSet]['ArgDeclaration'] = ''
 				if methodGet not in self.methodStack:
 					self.methodStack[methodGet] = {}
-					self.methodStack[methodGet]['Header'] = propertyType + ' ' + self.currentClass + '::' + methodGet + '()'
+					self.methodStack[methodGet]['Header'] = propertyType + ' ' + pointer + self.currentClass + '::' + methodGet + '()'
 					self.methodStack[methodGet]['Block'] = 'return this->' + propertyName + ';'
 					self.methodStack[methodGet]['ArgDeclaration'] = ''
+		if self.isModel:
+			if self.currentClass == "User":
+				pass
+				#pprint.pprint(self.methodStack)
 		# Generate source
 		for methodName in self.methodStack:
 			self.cppContent += self.methodStack[methodName]['Header'].rstrip('\n') + '\n'
@@ -399,20 +435,31 @@ class ClassCompiler:
 			self.cppContent += self.methodStack[methodName]['ArgDeclaration']
 			self.cppContent += self.methodStack[methodName]['Block'].rstrip('\n') + '\n'
 			self.cppContent += '}\n'
-		self.cppContent += '}\n}'
+		for namespace in self.namespace:
+			self.cppContent = self.cppContent + '}\n'
 
 	def compileFile(self, filePath):
+		self.initClassParser()
 		fileName = filePath.split(".")[0]
 		self.className = fileName.split("/")[-1]
 		cppPath	   = self.Input + "/" + fileName + ".cpp"
 		destHeaderPath = self.Output + "/" + fileName + ".h"
 		destCppPath = self.Output + "/" + fileName + ".cpp"
 		# Include header in source file
-		self.headerContent = ''
+		dirLevel = 3
+		if self.isModel:
+			dirLevel = 4
+		pathComponent = self.Output.split('/')[-dirLevel:]
+		definedName = ''
+		for com in pathComponent:
+			definedName += com.upper() + '_'
+		definedName += fileName.upper() + '_H_'
+		self.headerContent = '#ifndef ' + definedName + '\n#define ' + definedName + '\n'
 		self.cppContent = '#include "'+ self.className + '.h"\n'
 		self.parseController(cppPath)
 		self.generateHeader()
 		self.generateSource()
+		self.headerContent += '#endif'
 		# Prepare to write
 		header = open(destHeaderPath, 'w')
 		cpp = open(destCppPath, 'w')
@@ -540,10 +587,11 @@ location / {
 
 	def compile(self):
 		# List all class files from input directory
-		classFiles = os.listdir(self.Input)
-		for classFile in classFiles:
-			if classFile.endswith('.cpp'):
-				# Compile cpp file
-				self.compileFile(classFile)
+		if os.path.isdir(self.Input):
+			classFiles = os.listdir(self.Input)
+			for classFile in classFiles:
+				if classFile.endswith('.cpp'):
+					# Compile cpp file
+					self.compileFile(classFile)
 		#self.generateNginxConfig()
 		#self.generateControllerActionMapping()

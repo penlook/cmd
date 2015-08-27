@@ -45,10 +45,10 @@ class App:
 
 	def setRoot(self, root):
 		self.root = root
-		self.module  = root + '/module'
-		self.build   = root + '/build'
+		self.module  = root + '/src'
+		self.build   = root + '/gen'
 		self.service = root + '/service'
-		self.buildSource = self.build + '/app'
+		self.buildSource = self.build + '/module'
 		self.buildConfig = self.build + '/app/config'
 		return self
 
@@ -71,6 +71,7 @@ class App:
 			makedirs(destPath)
 		compiler = ClassCompiler('controller')
 		compiler  .setInput(targetPath) \
+		 		  .setNamespace([module, bundle, 'controller']) \
 				  .setOutput(destPath) \
 				  .setConfig(self.buildConfig) \
 				  .setTemplate(template) \
@@ -85,15 +86,10 @@ class App:
 			makedirs(destPath)
 		compiler = ClassCompiler('command')
 		compiler  .setInput(targetPath) \
+				  .setNamespace([module, bundle, 'command']) \
 				  .setOutput(destPath) \
 				  .setConfig(self.buildConfig) \
 				  .compile()
-		#controller = Controller()
-		#controller.setInput(targetPath) \
-		#		  .setOutput(destPath) \
-		#		  .setConfig(self.buildConfig) \
-		#		  .setTemplate(template) \
-		#		  .compile()
 
 	def compileProvider(self, root, module, bundle):
 		# Compile entity model
@@ -103,6 +99,7 @@ class App:
 			makedirs(destPath)
 		compiler = ClassCompiler('model')
 		compiler  .setInput(targetPath) \
+				  .setNamespace([module, bundle, 'entity']) \
 				  .setOutput(destPath) \
 				  .setConfig(self.buildConfig) \
 				  .compile()
@@ -170,5 +167,6 @@ class App:
 	def parse(self):
 		modules = self.expandTree(self.module)
 		for module in modules:
-			if path.isdir(path.join(self.module, module)):
-				self.compileModule(self.module, module)
+			if module.startswith("_cpp_"):
+				if path.isdir(path.join(self.module, module)):
+					self.compileModule(self.module, module)

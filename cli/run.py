@@ -37,7 +37,7 @@ import time
 class Run(argparse.Action):
 	
 	def prepare(self):
-		self.cwd += '/build/development'
+		self.cwd += '/gen/_development'
 		chdir(self.cwd)
 		# Clean up system
 		system("sync && echo 3 > /proc/sys/vm/drop_caches")
@@ -66,6 +66,7 @@ class Run(argparse.Action):
 		app = App()
 		app.setRoot(self.root)\
 		   .parse()
+		system("cd ../module && make")
 		#self.compileView()
 		#self.compileController()
 
