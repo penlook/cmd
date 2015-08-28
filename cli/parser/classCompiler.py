@@ -62,6 +62,7 @@ class ClassCompiler:
 	def initBundleParser(self):
 		self.namespace = []
 		self.includeAll = {}
+		self.listFiles  = []
 
 	def initClassParser(self):
 		self.commentFlag = False
@@ -122,6 +123,9 @@ class ClassCompiler:
 
 	def getViewData(self):
 		return self.viewData
+	
+	def getListFile(self):
+		return self.listFiles
 
 	def parseSourceFile(self, sourcePath):
 		pass
@@ -600,5 +604,6 @@ location / {
 				if classFile.endswith('.cpp'):
 					# Compile cpp file
 					self.compileFile(classFile)
+					self.listFiles.append(classFile)
 		#self.generateNginxConfig()
 		#self.generateControllerActionMapping()

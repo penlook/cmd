@@ -29,6 +29,7 @@
 
 from os import *
 from classCompiler import *
+from cmdGenerator import *
 from view import *
 import template
 from volt import *
@@ -37,9 +38,10 @@ import shutil
 class App:
 
 	def __init__(self):
-		self.listFiles  = []
-		self.viewStack  = []
-		self.includeLib = {}
+		self.listFiles   = []
+		self.viewStack   = []
+		self.listInclude = {}
+		self.listCommand = []
 
 	def setMode(self, mode):
 		self.mode = mode
@@ -50,7 +52,8 @@ class App:
 		self.module  = root + '/src'
 		self.build   = root + '/gen'
 		self.service = root + '/service'
-		self.buildSource = self.build + '/container'
+		self.container = self.build + '/container'
+		self.excutable = self.build + '/excutable'
 		self.buildConfig = self.build + '/app/config'
 		return self
 
@@ -68,7 +71,7 @@ class App:
 
 	def compileController(self, root, module, bundle):
 		targetPath = path.join(root, module, bundle, 'controller')
-		destPath = path.join(self.buildSource, module, bundle, 'controller')
+		destPath = path.join(self.container, module, bundle, 'controller')
 		if not path.isdir(destPath):
 			makedirs(destPath)
 		compiler = ClassCompiler('controller')
@@ -80,11 +83,11 @@ class App:
 				  .compile()
 		# Get all variables in actions
 		self.viewData   = compiler.viewData
-		self.includeLib = compiler.includeAll
+		self.listInclude = compiler.includeAll
 
 	def compileCommand(self, root, module, bundle):
 		targetPath = path.join(root, module, bundle, 'command')
-		destPath = path.join(self.buildSource, module, bundle, 'command')
+		destPath = path.join(self.container, module, bundle, 'command')
 		if not path.isdir(destPath):
 			makedirs(destPath)
 		compiler = ClassCompiler('command')
@@ -93,11 +96,14 @@ class App:
 				  .setOutput(destPath) \
 				  .setConfig(self.buildConfig) \
 				  .compile()
+		for cmdFile in compiler.getListFile():
+			commandClass = '::'.join([module, bundle, 'command', cmdFile]).split('.cpp')[0]
+			self.listCommand.append(commandClass)
 
 	def compileProvider(self, root, module, bundle):
 		# Compile entity model
 		targetPath = path.join(root, module, bundle, 'provider', 'entity')
-		destPath = path.join(self.buildSource, module, bundle, 'provider', 'entity')
+		destPath = path.join(self.container, module, bundle, 'provider', 'entity')
 		if not path.isdir(destPath):
 			makedirs(destPath)
 		compiler = ClassCompiler('model')
@@ -110,7 +116,7 @@ class App:
 	def compileResource(self, root, module, bundle):
 		# Compile volt template
 		viewTargetPath = path.join(root, module, bundle, 'resource', 'view')
-		viewDestPath = path.join(self.buildSource, module, bundle, 'resource', 'view')
+		viewDestPath = path.join(self.container, module, bundle, 'resource', 'view')
 		if not path.isdir(viewDestPath):
 			makedirs(viewDestPath)
 		self.listFiles = []
@@ -124,8 +130,8 @@ class App:
 			componentPath = templateFile[len(viewTargetPath):].split(".html")[0].split('/')[1:]
 			controllerName = componentPath[0]
 			viewHeader = '#include "view/view.h"\n'
-			if self.includeLib.has_key(controllerName):
-				for include in self.includeLib[controllerName]:
+			if self.listInclude.has_key(controllerName):
+				for include in self.listInclude[controllerName]:
 					viewHeader += include + '\n'
 			funcName = module + '_' + bundle  + '_' + '_'.join(componentPath)
 			self.viewStack.append(funcName);
@@ -142,13 +148,13 @@ class App:
 						volt.compile(templateFile, destCompileFile + ".cpp.html")
 						os.remove(destCompileFile + ".cpp.html")
 		#targetPath = path.join(root, module, bundle, 'resource')
-		#destPath = path.join(self.buildSource, module, bundle, 'resource')
+		#destPath = path.join(self.container, module, bundle, 'resource')
 		#if not path.isdir(destPath):
 		#	makedirs(destPath)
 
 	def compileTest(self, root, module, bundle):
 		targetPath = path.join(root, module, bundle, 'test')
-		destPath = path.join(self.buildSource, module, bundle, 'test')
+		destPath = path.join(self.container, module, bundle, 'test')
 		if not path.isdir(destPath):
 			makedirs(destPath)
 
@@ -180,18 +186,28 @@ class App:
 				return
 
 	def generateViewHeader(self):
-		viewHeaderDir = self.buildSource + '/view'
+		viewHeaderDir = self.container + '/view'
 		if not path.isdir(viewHeaderDir):
 			makedirs(viewHeaderDir)
 		volt = Volt()
 		volt.generateHeader(viewHeaderDir, self.viewStack)
+	
+	def generateCommand(self):
+		commandDir = self.excutable + '/cli'
+		if not path.isdir(commandDir):
+			makedirs(commandDir)
+		command = Command()
+		command.setOutput(commandDir)\
+			   .setListCommand(self.listCommand)\
+			   .generateCli()
 
 	def compileSource(self):
 		modules = self.expandTree(self.module)
 		for module in modules:
 			if module.startswith("_cpp_"):
 				if path.isdir(path.join(self.module, module)):
-					shutil.rmtree(path.join(self.buildSource, module))
+					if path.isdir(path.join(self.container, module)):
+						shutil.rmtree(path.join(self.container, module))
 					self.compileModule(self.module, module)
 		self.generateViewHeader()
 
@@ -200,4 +216,4 @@ class App:
 
 	def parse(self):
 		self.compileSource()
-		self.compileConfig()
+		self.generateCommand()

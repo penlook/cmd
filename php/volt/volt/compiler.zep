@@ -1790,10 +1790,10 @@ class Compiler implements InjectionAwareInterface
 		 * Echo statement
 		 */
 		if this->_autoescape {
-			return "<?cpp view->stream += escape(str(" . exprCode . ")); ?>";
+			return "<?cpp view->stream += escape(string(" . exprCode . ")); ?>";
 		}
 
-		return "<?cpp view->stream += str(" . exprCode . "); ?>";
+		return "<?cpp view->stream += string(" . exprCode . "); ?>";
 	}
 
 	/**

@@ -48,7 +48,7 @@ class Run(argparse.Action):
 		app = App()
 		app.setRoot(self.root)\
 		   .parse()
-		system("cd ../container && make")
+		system("cd .. && make")
 
 	def build(self):
 		system("./build.sh")
