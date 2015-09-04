@@ -193,13 +193,18 @@ class App:
 		volt.generateHeader(viewHeaderDir, self.viewStack)
 	
 	def generateCommand(self):
-		commandDir = self.excutable + '/cli'
-		if not path.isdir(commandDir):
-			makedirs(commandDir)
+		cliDir     = self.excutable + '/cli'
+		serverDir  = self.excutable + '/server'
+		if not path.isdir(cliDir):
+			makedirs(cliDir)
+		if not path.isdir(serverDir):
+			makedirs(serverDir)
 		command = Command()
-		command.setOutput(commandDir)\
+		command.setOutput(cliDir)\
 			   .setListCommand(self.listCommand)\
-			   .generateCli()
+			   .generateCli()\
+			   .setOutput(serverDir)\
+			   .generateServer()
 
 	def compileSource(self):
 		modules = self.expandTree(self.module)

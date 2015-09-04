@@ -1,5 +1,5 @@
 cd volt
 ../zephir/bin/zephir clean
-../zephir/bin/zephir builddev
+../zephir/bin/zephir build
 cd ..
 php compile.php

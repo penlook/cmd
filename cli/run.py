@@ -32,7 +32,6 @@ from parser import *
 import proxy
 import time
 
-#$ pen run
 #$ pen run app
 class Run(argparse.Action):
 	
@@ -48,7 +47,7 @@ class Run(argparse.Action):
 		app = App()
 		app.setRoot(self.root)\
 		   .parse()
-		system("cd .. && make")
+		system("cd .. && make -j")
 
 	def build(self):
 		system("./build.sh")
@@ -79,19 +78,3 @@ class Run(argparse.Action):
 		self.prepare()
 		self.parse()
 		#self.proxy()
-
-		#Handler = SimpleHTTPServer.SimpleHTTPRequestHandler
-		#httpd = SocketServer.TCPServer(("", PORT), Handler)
-		#print "serving at port", PORT
-		#httpd.serve_forever()
-
-		#HttpRequest proxyRequest;
-		#HttpResponse proxyResponse;
-		#Http server(proxyRequest, proxyResponse);
-		
-		#server.get("/", [&cwd](Request* _request, Response* _response) {
-		#	Debug debug;
-		#	debug.setResponse(_response)
-		#		 .setViewPath(cwd + "/view")
-		#		 .compile();
-		#});

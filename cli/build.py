@@ -30,40 +30,22 @@ import sys
 from os import *
 from parser import *
 
-#$ pen build
 #$ pen build app
 class Build(argparse.Action):
 	
 	def prepare(self):
 		system("pkill pendev")
-		self.cwd += '/build/_production'
+		self.cwd += '/gen/_production'
 		chdir(self.cwd)
 		# Clean up system
 		system("sync && echo 3 > /proc/sys/vm/drop_caches")
 		system("pkill pendev && service nginx stop")
 
-	def compileView(self):
-		print 'Template - Starting complie ...'
-		view = View()
-		view.setInput(self.root + "/module/home/user/resource/view") \
-			.setOutput(self.root + "/build/app/view") \
-			.setMode(View.PRODUCTION) \
-			.compile()
-		print 'Template - Done.'
-
-	def compileController(self):
-		print 'Controller - Starting complie ...'
-		controller = Controller()
-		controller.setInput(self.root + "/module/home/user/controller") \
-				  .setOutput(self.root + "/build/app/controller") \
-				  .setConfig(self.root + "/build/app/config") \
-				  .setTemplate(template) \
-				  .compile()
-		print 'Controller - Done.'
-
 	def parse(self):
-		self.compileView()
-		self.compileController()
+		app = App()
+		app.setRoot(self.root)\
+		   .parse()
+		system("cd .. && make -j")
 
 	def config(self):
 		system('./config.sh')
@@ -80,6 +62,5 @@ class Build(argparse.Action):
 
 		self.prepare()
 		self.parse()
-		#self.config()
+		self.config()
 		self.build()
-		

@@ -38,11 +38,46 @@ class Command:
 int main(int argc, char* argv[])
 {
 Cli *cli = new Cli();
+Input *input = new Input();
+Output *output = new Output();
 {{ listInstance }}
-cli->parse(argc, argv);
+cli ->parse(argc, argv)
+	->setInput(input)
+	->setOutput(output)
+	->execute();
+delete cli;
 return 0;
 }
 	"""
+	
+	serverTemplate = """// AUTO GENERATED
+// AUTO GENERATED
+#include <app/app.h>
+//#include "controllers.h"
+
+namespace app
+{
+	// Bootstrap
+	void boot(Storage *storage)
+	{
+		if (storage->getStatus() != Storage::READY) {
+			storage->setStatus(Storage::READY);
+				   //->setControllers(app::getControllers());
+		}
+	}
+
+	// Handler
+	void handler(App *app)
+	{
+		/*
+		app ->getController()
+			->Before()
+	 		->Run(app::callbackAction)
+			->After()
+			->Render();
+		*/
+	}
+}"""
 	def __init__(self):
 		pass
 	
@@ -93,5 +128,15 @@ return 0;
 			'listInstance' : instanceContent
 		}))
 		cli.close()
+		return self
+	
+	def generateServer(self):
+		serverMainPath = self.getOutput() + '/main.cpp'
+		server = open(serverMainPath, 'w')
+		server.write(self.renderString(self.serverTemplate, {
+			'listInclude' : '',
+			'listInstance' : ''
+		}))
+		server.close()
 		
 		

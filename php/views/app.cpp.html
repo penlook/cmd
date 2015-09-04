@@ -2,21 +2,21 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title><?cpp view->stream += str(title); ?> - An example blog</title>
+        <title><?cpp view->stream += string(title); ?> - An example blog</title>
     </head>
     <body>
         <?cpp if (show_navigation) { ?>
             <ul id="navigation">
             <?cpp for (menu : item) { ?>
-                <li><a href="<?cpp view->stream += str(item->getHref()); ?>"><?cpp view->stream += str(item->getCaption()); ?></a></li>
+                <li><a href="<?cpp view->stream += string(item->getHref()); ?>"><?cpp view->stream += string(item->getCaption()); ?></a></li>
             <?cpp } ?>
             </ul>
         <?cpp } ?>
 
-        <h1><?cpp view->stream += str(post->getTitle()); ?></h1>
+        <h1><?cpp view->stream += string(post->getTitle()); ?></h1>
 
         <div class="content">
-            <?cpp view->stream += str(post->getContent()); ?>
+            <?cpp view->stream += string(post->getContent()); ?>
         </div>
 
     </body>
