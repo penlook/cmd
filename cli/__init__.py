@@ -45,8 +45,6 @@ class Cli:
 		)
 
 	def setupCommand(self):
-		self.parser.add_argument("verbion", action=Version, help="Compiler verison")
-
 		subcommand = self.parser.add_subparsers()
 
 		parser_new = subcommand.add_parser('new', help = 'Create new application or component')
@@ -66,8 +64,10 @@ class Cli:
 		parser_test = subcommand.add_parser('test',  help = 'Run unit - integration test')
 		parser_test.add_argument('app_component', choices = ["unit", "benchmark"], nargs = "*", default = "unit", metavar = "app_component", help = "Application component", type = str, action = Test)
 		
-		#parser_build.add_argument('app_directory', default = "", metavar = "app_directory", help = "application directory", )
-
+		parser_version = subcommand.add_parser('version',  help = 'Compiler version')
+		parser_version.add_argument('app_component', default = " ", nargs = "*", metavar = "app_component", help = "Compiler version", type = str, action = Version)
+		
+		#self.parser.add_argument("version", action=Version, help="Compiler verison")	
 		self.args = self.parser.parse_args()
 
 	def parse(self):

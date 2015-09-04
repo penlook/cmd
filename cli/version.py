@@ -32,6 +32,5 @@ import os
 #$ pen test unit
 #$ pen test benchmark
 class Version(argparse.Action):
-	def __call__(self, namespace, unclear, argument_values, option_string = None):
+	def __call__(self, parser, args, values, option_string = None):
 		print 'version: 1.0.0'
-		exit(0)
