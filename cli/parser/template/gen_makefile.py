@@ -53,6 +53,7 @@ mk_object:
 	for file in $(OBJECT) ; do if [ ! -e $$file ]; then mkdir -p $$file && rm -rf $$file; fi done
 
 cli:
+	mkdir -p ../bin
 	$(G++) $(OBJLIB) $(OBJCLI) -I./container -I$(INCLUDE) -lpen -o ../bin/app-cli
 
 install:
