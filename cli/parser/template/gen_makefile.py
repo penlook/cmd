@@ -36,9 +36,11 @@ INCLUDE = /usr/lib/pen
 OBJECTD = object
 SOURCE  = $(shell find container excutable -name *.cpp)
 OBJECT  = $(addprefix $(OBJECTD)/, $(patsubst %.cpp, %.o, $(SOURCE)))
+OBJLIB  = $(shell find object/container -name *.o)
+OBJCLI	= $(shell find object/excutable/cli -name *.o)
 FLAGS   = $(BUILD)
 
-all: object cli
+all: object
 
 object: $(OBJECT)
 
@@ -49,8 +51,7 @@ $(OBJECT): mk_object
 
 mk_object:
 	for file in $(OBJECT) ; do if [ ! -f $$file ]; then mkdir -p $$file && rm -rf $$file; fi done
-	$(eval OBJLIB = $(shell find object/container -name *.o))
-	$(eval OBJCLI = $(shell find object/excutable/cli -name *.o))
+	make cli
 
 cli:
 	mkdir -p ../bin

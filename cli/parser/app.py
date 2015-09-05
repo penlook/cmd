@@ -102,7 +102,7 @@ class App:
 			self.listCommand.append(commandClass)
 
 	def compileProvider(self, root, module, bundle):
-		# Compile entity model
+		# Compile entity model	
 		targetPath = path.join(root, module, bundle, 'provider', 'entity')
 		destPath = path.join(self.container, module, bundle, 'provider', 'entity')
 		if not path.isdir(destPath):
@@ -196,7 +196,7 @@ class App:
 		volt.generateHeader(viewHeaderDir, self.viewStack)
 
 	def generateMain(self):
-		cliDir = self.excutable + '/cli'
+		cliDir    = self.excutable + '/cli'
 		serverDir = self.excutable + '/server'
 		if not path.isdir(cliDir):
 			makedirs(cliDir)
