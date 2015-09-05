@@ -135,17 +135,18 @@ class App:
 			funcName = module + '_' + bundle  + '_' + '_'.join(componentPath)
 			self.viewStack.append(funcName);
 			if len(componentPath) == 2:
-				# Controller view
-				if self.viewData.has_key(componentPath[0]):
-					# Action view
-					if self.viewData[componentPath[0]].has_key(componentPath[1]):
-						volt.setData({
-							"variables" : self.viewData[componentPath[0]][componentPath[1]],
-							"viewHeader" : viewHeader,
-							"funcName": funcName
-						})
-						volt.compile(templateFile, destCompileFile + ".cpp.html")
-						os.remove(destCompileFile + ".cpp.html")
+				if self.viewData:
+					# Controller view
+					if self.viewData.has_key(componentPath[0]):
+						# Action view
+						if self.viewData[componentPath[0]].has_key(componentPath[1]):
+							volt.setData({
+								"variables" : self.viewData[componentPath[0]][componentPath[1]],
+								"viewHeader" : viewHeader,
+								"funcName": funcName
+							})
+							volt.compile(templateFile, destCompileFile + ".cpp.html")
+							os.remove(destCompileFile + ".cpp.html")
 		#targetPath = path.join(root, module, bundle, 'resource')
 		#destPath = path.join(self.container, module, bundle, 'resource')
 		#if not path.isdir(destPath):
