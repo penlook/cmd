@@ -51,7 +51,6 @@ class App:
 		self.root = root
 		self.module  = root + '/src'
 		self.build   = root + '/gen'
-		self.service = root + '/service'
 		self.container = self.build + '/container'
 		self.excutable = self.build + '/excutable'
 		self.buildConfig = self.build + '/app/config'
@@ -192,7 +191,7 @@ class App:
 		volt = Volt()
 		volt.generateHeader(viewHeaderDir, self.viewStack)
 	
-	def generateCommand(self):
+	def generateMain(self):
 		cliDir     = self.excutable + '/cli'
 		serverDir  = self.excutable + '/server'
 		if not path.isdir(cliDir):
@@ -205,6 +204,14 @@ class App:
 				 .generateCli()\
 				 .setOutput(serverDir)\
 				 .generateServer()
+
+	def generateMakefile(self):
+		genMakefile = self.root
+		generator = Generator()
+		generator.setOutput(self.root)\
+				 .generateAppMakefile()\
+				 .setOutput(self.build)\
+				 .generateGenMakefile()
 
 	def compileSource(self):
 		modules = self.expandTree(self.module)
@@ -221,4 +228,5 @@ class App:
 
 	def parse(self):
 		self.compileSource()
-		self.generateCommand()
+		self.generateMain()
+		self.generateMakefile()

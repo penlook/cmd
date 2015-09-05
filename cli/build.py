@@ -38,7 +38,6 @@ class Build(argparse.Action):
 		self.cwd += '/gen/_production'
 		chdir(self.cwd)
 		# Clean up system
-		system("sync && echo 3 > /proc/sys/vm/drop_caches")
 		system("pkill pendev && service nginx stop")
 
 	def parse(self):
@@ -54,9 +53,9 @@ class Build(argparse.Action):
 		system('./build.sh')
 
 	def __call__(self, parser, args, values, option_string = None):
-		self.root = getcwd();
+		self.root = getcwd()
 		if len(values) > 0 :
-			self.root += "/" + values
+			self.root += "/" + values[0]
 		chdir(self.root)
 		self.cwd = self.root
 

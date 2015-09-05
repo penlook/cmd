@@ -38,7 +38,7 @@ setup(
 	scripts=['pen.py'],
 	packages=find_packages(),
 	install_requires=['MarkupSafe'],
-    extras_require={
+	extras_require={
 		'i18n': [
 			'Babel>=0.8'
 		]

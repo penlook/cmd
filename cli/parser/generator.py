@@ -93,5 +93,19 @@ class Generator:
 			'listInstance' : ''
 		}))
 		server.close()
-		
-		
+	
+	def generateAppMakefile(self):
+		appMakefile = self.getOutput() + '/Makefile'
+		makefile = open(appMakefile, 'w')
+		makefile.write(self.renderString(app_makefile, {
+		}))
+		makefile.close()
+		return self
+	
+	def generateGenMakefile(self):
+		genMakefile = self.getOutput() + '/Makefile'
+		makefile = open(genMakefile, 'w')
+		makefile.write(self.renderString(gen_makefile, {
+		}))
+		makefile.close()
+		return self

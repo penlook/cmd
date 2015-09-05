@@ -39,7 +39,6 @@ class Run(argparse.Action):
 		self.cwd += '/gen/_development'
 		chdir(self.cwd)
 		# Clean up system
-		system("sync && echo 3 > /proc/sys/vm/drop_caches")
 		system("pkill pendev && service nginx stop")
 		system("fuser -k 80/tcp")
 
