@@ -31,14 +31,13 @@ BIN = /usr/bin
 all: server service client
 
 server:
-	pen compile
-	@cd gen && make
+	cd gen && make
 
 service:
-	@cd src/_go_service && make
+	cd src/_go_service && make
 
 client:
-	@cd src/_ts_client && make
+	cd src/_ts_client && make
 
 install:
 	@cd src/_go_service && make install
