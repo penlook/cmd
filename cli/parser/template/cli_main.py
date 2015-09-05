@@ -25,10 +25,19 @@
 # Authors:
 #     Loi Nguyen       <loint@penlook.com>
 
-from nginx_config import *
-from template_builder import *
-from app_structure import *
-from cli_main import *
-from server_main import *
-from app_makefile import *
-from gen_makefile import *
+cli_main = """// AUTO GENERATED
+#include <app/command.h>
+{{ listInclude }}
+int main(int argc, char* argv[])
+{
+Cli *cli = new Cli();
+Input *input = new Input();
+Output *output = new Output();
+{{ listInstance }}
+cli ->parse(argc, argv)
+	->setInput(input)
+	->setOutput(output)
+	->execute();
+delete cli;
+return 0;
+"""

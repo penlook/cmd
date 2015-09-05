@@ -41,7 +41,7 @@ def tab(times):
 		tabContent += '\t'
 	return tabContent
 
-class ClassCompiler:
+class Compiler:
 
 	def __init__(self, typeName):
 		self.typeName =  typeName

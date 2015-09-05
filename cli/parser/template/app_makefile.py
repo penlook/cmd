@@ -25,10 +25,39 @@
 # Authors:
 #     Loi Nguyen       <loint@penlook.com>
 
-from nginx_config import *
-from template_builder import *
-from app_structure import *
-from cli_main import *
-from server_main import *
-from app_makefile import *
-from gen_makefile import *
+app_makefile = """
+BIN = /usr/bin
+
+all: server service client
+
+server:
+	pen compile
+	@cd gen && make
+
+service:
+	@cd src/_go_service && make
+
+client:
+	@cd src/_ts_client && make
+
+install:
+	@cd src/_go_service && make install
+	@cp ./bin/app.sh $(BIN)/app
+	@chmod +x $(BIN)/app
+	@mkdir -p $(BIN)/app-bin
+	@cp ./bin/app-* $(BIN)/app-bin/
+	@chmod +x $(BIN)/app-bin/*
+
+test:
+	@cd gen && make test
+	@cd src/_go_service && make test
+	@cd src/_ts_client && make test
+
+clean:
+	@cd src/_go_service && make clean
+	@cd src/_ts_client && make clean
+	rm -rf $(BIN)/app
+	rm -rf $(BIN)/app-bin
+
+.PHONY: clean test server service client
+"""

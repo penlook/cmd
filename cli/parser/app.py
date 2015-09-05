@@ -28,8 +28,8 @@
 # Application parser
 
 from os import *
-from classCompiler import *
-from cmdGenerator import *
+from compiler import *
+from generator import *
 from view import *
 import template
 from volt import *
@@ -74,7 +74,7 @@ class App:
 		destPath = path.join(self.container, module, bundle, 'controller')
 		if not path.isdir(destPath):
 			makedirs(destPath)
-		compiler = ClassCompiler('controller')
+		compiler = Compiler('controller')
 		compiler  .setInput(targetPath) \
 		 		  .setNamespace([module, bundle, 'controller']) \
 				  .setOutput(destPath) \
@@ -90,7 +90,7 @@ class App:
 		destPath = path.join(self.container, module, bundle, 'command')
 		if not path.isdir(destPath):
 			makedirs(destPath)
-		compiler = ClassCompiler('command')
+		compiler = Compiler('command')
 		compiler  .setInput(targetPath) \
 				  .setNamespace([module, bundle, 'command']) \
 				  .setOutput(destPath) \
@@ -106,7 +106,7 @@ class App:
 		destPath = path.join(self.container, module, bundle, 'provider', 'entity')
 		if not path.isdir(destPath):
 			makedirs(destPath)
-		compiler = ClassCompiler('model')
+		compiler = Compiler('model')
 		compiler  .setInput(targetPath) \
 				  .setNamespace([module, bundle, 'entity']) \
 				  .setOutput(destPath) \
@@ -199,12 +199,12 @@ class App:
 			makedirs(cliDir)
 		if not path.isdir(serverDir):
 			makedirs(serverDir)
-		command = Command()
-		command.setOutput(cliDir)\
-			   .setListCommand(self.listCommand)\
-			   .generateCli()\
-			   .setOutput(serverDir)\
-			   .generateServer()
+		generator = Generator()
+		generator.setOutput(cliDir)\
+				 .setListCommand(self.listCommand)\
+				 .generateCli()\
+				 .setOutput(serverDir)\
+				 .generateServer()
 
 	def compileSource(self):
 		modules = self.expandTree(self.module)

@@ -29,55 +29,10 @@
 
 import re
 import os
+from template import *
 
-class Command:
-	
-	cliTemplate = """// AUTO GENERATED
-#include <app/command.h>
-{{ listInclude }}
-int main(int argc, char* argv[])
-{
-Cli *cli = new Cli();
-Input *input = new Input();
-Output *output = new Output();
-{{ listInstance }}
-cli ->parse(argc, argv)
-	->setInput(input)
-	->setOutput(output)
-	->execute();
-delete cli;
-return 0;
-}
-	"""
-	
-	serverTemplate = """// AUTO GENERATED
-// AUTO GENERATED
-#include <app/app.h>
-//#include "controllers.h"
+class Generator:
 
-namespace app
-{
-	// Bootstrap
-	void boot(Storage *storage)
-	{
-		if (storage->getStatus() != Storage::READY) {
-			storage->setStatus(Storage::READY);
-				   //->setControllers(app::getControllers());
-		}
-	}
-
-	// Handler
-	void handler(App *app)
-	{
-		/*
-		app ->getController()
-			->Before()
-	 		->Run(app::callbackAction)
-			->After()
-			->Render();
-		*/
-	}
-}"""
 	def __init__(self):
 		pass
 	
@@ -123,7 +78,7 @@ namespace app
 		for command in self.getListCommand():
 			className = command.split("::")[-1]
 			instanceContent += 'cli->addCommand(new ' + className + '());\n'
-		cli.write(self.renderString(self.cliTemplate, {
+		cli.write(self.renderString(cli_main, {
 			'listInclude' : includeContent,
 			'listInstance' : instanceContent
 		}))
@@ -133,7 +88,7 @@ namespace app
 	def generateServer(self):
 		serverMainPath = self.getOutput() + '/main.cpp'
 		server = open(serverMainPath, 'w')
-		server.write(self.renderString(self.serverTemplate, {
+		server.write(self.renderString(server_main, {
 			'listInclude' : '',
 			'listInstance' : ''
 		}))

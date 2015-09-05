@@ -25,10 +25,31 @@
 # Authors:
 #     Loi Nguyen       <loint@penlook.com>
 
-from nginx_config import *
-from template_builder import *
-from app_structure import *
-from cli_main import *
-from server_main import *
-from app_makefile import *
-from gen_makefile import *
+server_main = """// AUTO GENERATED
+#include <app/app.h>
+#include "controllers.h"
+
+namespace app
+{
+	// Bootstrap
+	void boot(Storage *storage)
+	{
+		if (storage->getStatus() != Storage::READY) {
+			storage->setStatus(Storage::READY);
+				   //->setControllers(app::getControllers());
+		}
+	}
+
+	// Handler
+	void handler(App *app)
+	{
+		/*
+		app ->getController()
+			->Before()
+	 		->Run(app::callbackAction)
+			->After()
+			->Render();
+		*/
+	}
+}
+"""

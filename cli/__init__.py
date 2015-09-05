@@ -51,10 +51,10 @@ class Cli:
 		parser_new.add_argument('name', metavar = "name", help = "application or component name", type = str, action = Create)
 
 		parser_run = subcommand.add_parser('run', help = 'Develop application using hot-code reload')
-		parser_run.add_argument('app_directory', default = "", metavar = "app_directory", help = "application directory", type = str, action = Run)
+		parser_run.add_argument('app_directory', default = "", nargs = "*", metavar = "app_directory", help = "application directory", type = str, action = Run)
 
 		parser_build = subcommand.add_parser('build', help = 'Build application as Nginx module')
-		parser_build.add_argument('app_directory', default = "", metavar = "app_directory", help = "application directory", type = str, action = Build)
+		parser_build.add_argument('app_directory', default = "", nargs = "*", metavar = "app_directory", help = "application directory", type = str, action = Build)
 
 		parser_debug = subcommand.add_parser('debug', help = 'Debug application or component structure')
 		parser_debug.add_argument('app_component',
