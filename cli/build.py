@@ -29,6 +29,7 @@ import argparse
 import sys
 from os import *
 from parser import *
+import time
 
 #$ pen build app
 class Build(argparse.Action):
@@ -44,7 +45,8 @@ class Build(argparse.Action):
 		app = App()
 		app.setRoot(self.root)\
 		   .parse()
-		exit()
+		time.sleep(1)
+		system("cd .. && make")
 
 	def config(self):
 		system('./config.sh')
