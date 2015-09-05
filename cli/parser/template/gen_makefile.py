@@ -53,6 +53,7 @@ mk_object:
 
 cli:
 	mkdir -p ../bin
+	ls -la
 	$(G++) $(shell find object/container -name *.o) $(shell find object/excutable/cli -name *.o) -I./container -I$(INCLUDE) -lpen -o ../bin/app-cli
 
 install:
