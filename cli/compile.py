@@ -25,3 +25,23 @@
 # Authors:
 #     Loi Nguyen       <loint@penlook.com>
 
+import argparse
+import sys
+from os import *
+from parser import *
+import time
+
+#$ pen build app
+class Compile(argparse.Action):
+	
+	def parse(self):
+		app = App()
+		app.setRoot(self.root)\
+		   .parse()
+
+	def __call__(self, parser, args, values, option_string = None):
+		self.root = getcwd()
+		if len(values) > 0 :
+			self.root += "/" + values[0]
+		chdir(self.root)
+		self.parse()

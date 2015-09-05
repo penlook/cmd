@@ -29,6 +29,7 @@ import argparse
 
 from create import *
 from build import *
+from compile import *
 from debug import *
 from test import *
 from run import *
@@ -55,6 +56,9 @@ class Cli:
 
 		parser_build = subcommand.add_parser('build', help = 'Build application as Nginx module')
 		parser_build.add_argument('app_directory', default = "", nargs = "*", metavar = "app_directory", help = "application directory", type = str, action = Build)
+		
+		parser_build = subcommand.add_parser('compile', help = 'Build application as Nginx module')
+		parser_build.add_argument('app_directory', default = "", nargs = "*", metavar = "app_directory", help = "application directory", type = str, action = Compile)
 
 		parser_debug = subcommand.add_parser('debug', help = 'Debug application or component structure')
 		parser_debug.add_argument('app_component',

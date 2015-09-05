@@ -38,21 +38,12 @@ class Build(argparse.Action):
 		system("pkill pendev")
 		self.cwd += '/gen/_production'
 		chdir(self.cwd)
-		# Clean up system
 		system("pkill pendev && service nginx stop")
 
-	def parse(self):
-		app = App()
-		app.setRoot(self.root)\
-		   .parse()
-		time.sleep(1)
-		system("cd .. && make")
-
-	def config(self):
-		system('./config.sh')
-
 	def build(self):
-		system('./build.sh')
+		system("cd .. && make")
+		system('chmod +x ./config.sh && ./config.sh')
+		system('chmod +x ./build.sh  && ./build.sh')
 
 	def __call__(self, parser, args, values, option_string = None):
 		self.root = getcwd()
@@ -62,6 +53,4 @@ class Build(argparse.Action):
 		self.cwd = self.root
 
 		self.prepare()
-		self.parse()
-		self.config()
 		self.build()
