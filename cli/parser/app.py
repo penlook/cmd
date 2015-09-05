@@ -167,15 +167,19 @@ class App:
 					self.compileCommand(root, module, bundle)
 					continue
 				if component == 'controller':
+					return
 					self.compileController(root, module, bundle)
 					continue
 				if component == 'provider':
+					return
 					self.compileProvider(root, module, bundle)
 					continue
 				if component == 'resource':
+					return
 					self.compileResource(root, module, bundle)
 					continue
 				if component == 'test':
+					return
 					self.compileTest(root, module, bundle)
 					continue
 
