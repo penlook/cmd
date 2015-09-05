@@ -44,7 +44,6 @@ class Build(argparse.Action):
 		app = App()
 		app.setRoot(self.root)\
 		   .parse()
-		system("cd .. && make")
 		exit()
 
 	def config(self):
