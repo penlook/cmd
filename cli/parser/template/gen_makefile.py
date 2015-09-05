@@ -36,8 +36,6 @@ INCLUDE = /usr/lib/pen
 OBJECTD = object
 SOURCE  = $(shell find container excutable -name *.cpp)
 OBJECT  = $(addprefix $(OBJECTD)/, $(patsubst %.cpp, %.o, $(SOURCE)))
-OBJLIB  = $(shell find object/container -name *.o)
-OBJCLI	= $(shell find object/excutable/cli -name *.o)
 FLAGS   = $(BUILD)
 
 all: object
@@ -55,6 +53,8 @@ mk_object:
 
 cli:
 	mkdir -p ../bin
+	$(eval OBJLIB = $(shell find object/container -name *.o))
+	$(eval OBJCLI = $(shell find object/excutable/cli -name *.o))
 	$(G++) $(OBJLIB) $(OBJCLI) -I./container -I$(INCLUDE) -lpen -o ../bin/app-cli
 
 install:
