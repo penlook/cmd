@@ -135,7 +135,7 @@ class App:
 			funcName = module + '_' + bundle  + '_' + '_'.join(componentPath)
 			self.viewStack.append(funcName);
 			if len(componentPath) == 2:
-				if self.viewData:
+				if hasattr(self, 'viewData'):
 					# Controller view
 					if self.viewData.has_key(componentPath[0]):
 						# Action view
