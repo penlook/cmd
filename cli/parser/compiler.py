@@ -603,6 +603,7 @@ location / {
 			for classFile in classFiles:
 				if classFile.endswith('.cpp'):
 					# Compile cpp file
+					print '        ', classFile
 					self.compileFile(classFile)
 					self.listFiles.append(classFile)
 		#self.generateNginxConfig()

@@ -69,6 +69,7 @@ class App:
 					self.listFiles += [path.join(root, file)]
 
 	def compileController(self, root, module, bundle):
+		print '    controller'
 		targetPath = path.join(root, module, bundle, 'controller')
 		destPath = path.join(self.container, module, bundle, 'controller')
 		if not path.isdir(destPath):
@@ -85,6 +86,7 @@ class App:
 		self.listInclude = compiler.includeAll
 
 	def compileCommand(self, root, module, bundle):
+		print '     command'
 		targetPath = path.join(root, module, bundle, 'command')
 		destPath = path.join(self.container, module, bundle, 'command')
 		if not path.isdir(destPath):
@@ -187,6 +189,7 @@ class App:
 		bundles = self.expandTree(path.join(root, module))
 		for bundle in bundles:
 			if path.isdir(path.join(root, module, bundle)):
+				print '  ', bundle
 				self.compileBundle(root, module, bundle)
 				return
 
@@ -220,12 +223,14 @@ class App:
 				 .generateGenMakefile()
 
 	def compileSource(self):
+		print 'Compiling ..'
 		modules = self.expandTree(self.module)
 		for module in modules:
 			if module.startswith("_cpp_"):
 				if path.isdir(path.join(self.module, module)):
 					if path.isdir(path.join(self.container, module)):
 						shutil.rmtree(path.join(self.container, module))
+					print module
 					self.compileModule(self.module, module)
 		self.generateViewHeader()
 
