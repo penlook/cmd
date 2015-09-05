@@ -169,20 +169,16 @@ class App:
 					self.compileCommand(root, module, bundle)
 					continue
 				if component == 'controller':
-					return
-					self.compileController(root, module, bundle)
+					#self.compileController(root, module, bundle)
 					continue
 				if component == 'provider':
-					return
-					self.compileProvider(root, module, bundle)
+					#self.compileProvider(root, module, bundle)
 					continue
 				if component == 'resource':
-					return
-					self.compileResource(root, module, bundle)
+					#self.compileResource(root, module, bundle)
 					continue
 				if component == 'test':
-					return
-					self.compileTest(root, module, bundle)
+					#self.compileTest(root, module, bundle)
 					continue
 
 	def compileModule(self, root, module):
@@ -199,10 +195,10 @@ class App:
 			makedirs(viewHeaderDir)
 		volt = Volt()
 		volt.generateHeader(viewHeaderDir, self.viewStack)
-	
+
 	def generateMain(self):
-		cliDir     = self.excutable + '/cli'
-		serverDir  = self.excutable + '/server'
+		cliDir = self.excutable + '/cli'
+		serverDir = self.excutable + '/server'
 		if not path.isdir(cliDir):
 			makedirs(cliDir)
 		if not path.isdir(serverDir):
