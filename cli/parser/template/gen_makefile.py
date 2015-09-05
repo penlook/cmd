@@ -41,6 +41,7 @@ FLAGS   = $(BUILD)
 all: object
 
 object: $(OBJECT)
+    
 
 $(OBJECTD)/%.o: %.cpp
 	$(G++) -c $(FLAGS) -I./container -I$(INCLUDE) -lpen $< -o $@ 2>&1
@@ -53,11 +54,9 @@ mk_object:
 
 cli:
 	mkdir -p ../bin
-	$(eval OBJECTS = $(shell find object/container -name *.o))
-	$(eval OBJECTCLI = $(shell find object/excutable/cli -name *.o))
-	echo $(OBJECTS)
-	echo $(OBJECTCLI)
-	$(G++) $(OBJECTS) $(OBJECTCLI) -I./container -I$(INCLUDE) -lpen -o ../bin/app-cli
+	echo $(shell find object/container -name *.o)
+	#$(eval OBJECTCLI = $(shell find object/excutable/cli -name *.o))
+	$(G++) -I./container -I$(INCLUDE) -lpen -o ../bin/app-cli
 
 install:
 	cp -rf $(BINARY_CLI) /usr/bin/$(BINARY_CLI)
