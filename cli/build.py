@@ -44,7 +44,7 @@ class Build(argparse.Action):
 		app = App()
 		app.setRoot(self.root)\
 		   .parse()
-		system("cd .. && find -name *.cpp ")
+		system("cd .. && make -j")
 		exit()
 
 	def config(self):

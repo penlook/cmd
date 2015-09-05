@@ -54,7 +54,6 @@ mk_object:
 
 cli:
 	mkdir -p ../bin
-	echo $(SOURCE)
 	$(G++) $(OBJLIB) $(OBJCLI) -I./container -I$(INCLUDE) -lpen -o ../bin/app-cli
 
 install:

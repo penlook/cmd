@@ -69,7 +69,7 @@ class App:
 					self.listFiles += [path.join(root, file)]
 
 	def compileController(self, root, module, bundle):
-		print '    controller'
+		print '      controller'
 		targetPath = path.join(root, module, bundle, 'controller')
 		destPath = path.join(self.container, module, bundle, 'controller')
 		if not path.isdir(destPath):
@@ -86,7 +86,7 @@ class App:
 		self.listInclude = compiler.includeAll
 
 	def compileCommand(self, root, module, bundle):
-		print '     command'
+		print '      command'
 		targetPath = path.join(root, module, bundle, 'command')
 		destPath = path.join(self.container, module, bundle, 'command')
 		if not path.isdir(destPath):
@@ -169,10 +169,10 @@ class App:
 					self.compileCommand(root, module, bundle)
 					continue
 				if component == 'controller':
-					#self.compileController(root, module, bundle)
+					self.compileController(root, module, bundle)
 					continue
 				if component == 'provider':
-					#self.compileProvider(root, module, bundle)
+					self.compileProvider(root, module, bundle)
 					continue
 				if component == 'resource':
 					#self.compileResource(root, module, bundle)
