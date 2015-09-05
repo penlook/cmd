@@ -113,6 +113,7 @@ class App:
 				  .compile()
 
 	def compileResource(self, root, module, bundle):
+		return
 		# Compile volt template
 		viewTargetPath = path.join(root, module, bundle, 'resource', 'view')
 		viewDestPath = path.join(self.container, module, bundle, 'resource', 'view')
