@@ -45,6 +45,7 @@ class Build(argparse.Action):
 		app.setRoot(self.root)\
 		   .parse()
 		system("cd .. && make -j")
+		exit()
 
 	def config(self):
 		system('./config.sh')

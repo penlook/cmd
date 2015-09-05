@@ -27,7 +27,7 @@
 
 server_main = """// AUTO GENERATED
 #include <app/app.h>
-#include "controllers.h"
+//#include "controllers.h"
 
 namespace app
 {

@@ -40,4 +40,5 @@ cli ->parse(argc, argv)
 	->execute();
 delete cli;
 return 0;
+}
 """
