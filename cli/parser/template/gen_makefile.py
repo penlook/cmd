@@ -53,8 +53,11 @@ mk_object:
 
 cli:
 	mkdir -p ../bin
-	ls -la
-	$(G++) $(shell find object/container -name *.o) $(shell find object/excutable/cli -name *.o) -I./container -I$(INCLUDE) -lpen -o ../bin/app-cli
+	$(eval OBJECTS = $(shell find object/container -name *.o))
+	$(eval OBJECTCLI = $(shell find object/excutable/cli -name *.o))
+	echo $(OBJECTS)
+	echo $(OBJECTCLI)
+	$(G++) $(OBJECTS) $(OBJECTCLI) -I./container -I$(INCLUDE) -lpen -o ../bin/app-cli
 
 install:
 	cp -rf $(BINARY_CLI) /usr/bin/$(BINARY_CLI)
