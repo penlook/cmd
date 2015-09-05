@@ -187,7 +187,6 @@ class App:
 			if path.isdir(path.join(root, module, bundle)):
 				print '  ', bundle
 				self.compileBundle(root, module, bundle)
-				return
 
 	def generateViewHeader(self):
 		viewHeaderDir = self.container + '/view'
