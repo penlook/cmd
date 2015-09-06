@@ -30,6 +30,7 @@ import argparse
 from create import *
 from build import *
 from compile import *
+from deploy import *
 from debug import *
 from test import *
 from run import *
@@ -54,11 +55,14 @@ class Cli:
 		parser_run = subcommand.add_parser('run', help = 'Develop application using hot-code reload')
 		parser_run.add_argument('app_directory', default = "", nargs = "*", metavar = "app_directory", help = "application directory", type = str, action = Run)
 
-		parser_build = subcommand.add_parser('build', help = 'Build application as Nginx module')
+		parser_build = subcommand.add_parser('build', help = 'Build application to executable file')
 		parser_build.add_argument('app_directory', default = "", nargs = "*", metavar = "app_directory", help = "application directory", type = str, action = Build)
-		
-		parser_build = subcommand.add_parser('compile', help = 'Build application as Nginx module')
+
+		parser_build = subcommand.add_parser('compile', help = 'Compile application to pure C++')
 		parser_build.add_argument('app_directory', default = "", nargs = "*", metavar = "app_directory", help = "application directory", type = str, action = Compile)
+
+		parser_build = subcommand.add_parser('deploy', help = 'Deploy application to cloud')
+		parser_build.add_argument('app_directory', default = "", nargs = "*", metavar = "app_directory", help = "application directory", type = str, action = Deploy)
 
 		parser_debug = subcommand.add_parser('debug', help = 'Debug application or component structure')
 		parser_debug.add_argument('app_component',
@@ -66,12 +70,11 @@ class Cli:
 			metavar = "app_component", help = "application component", type = str, action = Debug)
 
 		parser_test = subcommand.add_parser('test',  help = 'Run unit - integration test')
-		parser_test.add_argument('app_component', choices = ["unit", "benchmark"], nargs = "*", default = "unit", metavar = "app_component", help = "Application component", type = str, action = Test)
-		
+		parser_test.add_argument('app_component', nargs = "*", default = "unit", metavar = "app_component", help = "Application component", type = str, action = Test)
+
 		parser_version = subcommand.add_parser('version',  help = 'Compiler version')
 		parser_version.add_argument('app_component', default = " ", nargs = "*", metavar = "app_component", help = "Compiler version", type = str, action = Version)
-		
-		#self.parser.add_argument("version", action=Version, help="Compiler verison")	
+
 		self.args = self.parser.parse_args()
 
 	def parse(self):

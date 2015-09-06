@@ -26,12 +26,10 @@
 #     Loi Nguyen       <loint@penlook.com>
 
 import argparse
-import os
+from parser import *
+import os, string
 
-#$ pen test
-#$ pen test unit
-#$ pen test benchmark
-class Test(argparse.Action):
+#$ pen deploy
+class Deploy(argparse.Action):
 	def __call__(self, parser, args, values, option_string = None):
-		print 'Unit test'
-		#os.system('ab -c 100 -n 10000  http://localhost/')
+		print 'Deploy application'
