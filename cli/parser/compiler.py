@@ -99,22 +99,26 @@ class Compiler:
 		self.viewData = {}
 		self.isAction = False
 
+	def setSpace(self, space):
+		self.space = space
+		return self
+
 	def setInput(self, targetDir):
-		self.Input = targetDir
+		self.input = targetDir
 		return self
 
 	def setOutput(self, destDir):
-		self.Output = destDir
-		if not os.path.isdir(self.Output):
-			os.makedirs(self.Output)
+		self.output = destDir
+		if not os.path.isdir(self.output):
+			os.makedirs(self.output)
 		return self
 
 	def setTemplate(self, templateContext):
-		self.Template = templateContext
+		self.template = templateContext
 		return self
 
 	def setConfig(self, configDir):
-		self.Config = configDir
+		self.config = configDir
 		return self
 	
 	def setNamespace(self, namespace):
@@ -453,14 +457,14 @@ class Compiler:
 		self.initClassParser()
 		fileName = filePath.split(".")[0]
 		self.className = fileName.split("/")[-1]
-		cppPath	   = self.Input + "/" + fileName + ".cpp"
-		destHeaderPath = self.Output + "/" + fileName + ".h"
-		destCppPath = self.Output + "/" + fileName + ".cpp"
+		cppPath	   = self.input + "/" + fileName + ".cpp"
+		destHeaderPath = self.output + "/" + fileName + ".h"
+		destCppPath = self.output + "/" + fileName + ".cpp"
 		# Include header in source file
 		dirLevel = 3
 		if self.isModel:
 			dirLevel = 4
-		pathComponent = self.Output.split('/')[-dirLevel:]
+		pathComponent = self.output.split('/')[-dirLevel:]
 		definedName = ''
 		for com in pathComponent:
 			definedName += com.upper() + '_'
@@ -518,7 +522,7 @@ class Compiler:
 		return content
 
 	def generateControllerActionMapping(self):
-		controllesH = os.path.abspath(self.Output + '/../main/controllers.h')
+		controllesH = os.path.abspath(self.output + '/../main/controllers.h')
 		controllers = open(controllesH, 'w')
 		controllersTemplate = """
 // AUTO GENERATED
@@ -591,19 +595,19 @@ namespace app {
 location / {
 	app 123456789;
 }"""
-		configContent = self.Template.nginx_config.replace('{{ app }}', configContent)
+		configContent = self.template.nginx_config.replace('{{ app }}', configContent)
 		app_config = self.Config + '/app.conf'
 		nginx = open(app_config, 'w')
 		nginx.write(configContent)
 
 	def compile(self):
 		# List all class files from input directory
-		if os.path.isdir(self.Input):
-			classFiles = os.listdir(self.Input)
+		if os.path.isdir(self.input):
+			classFiles = os.listdir(self.input)
 			for classFile in classFiles:
 				if classFile.endswith('.cpp'):
 					# Compile cpp file
-					print '        ', classFile
+					print self.space, classFile
 					self.compileFile(classFile)
 					self.listFiles.append(classFile)
 		#self.generateNginxConfig()

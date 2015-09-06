@@ -75,12 +75,13 @@ class App:
 		if not path.isdir(destPath):
 			makedirs(destPath)
 		compiler = Compiler('controller')
-		compiler  .setInput(targetPath) \
-		 		  .setNamespace([module, bundle, 'controller']) \
-				  .setOutput(destPath) \
-				  .setConfig(self.buildConfig) \
-				  .setTemplate(template) \
-				  .compile()
+		compiler.setSpace('        ') \
+				.setInput(targetPath) \
+		 		.setNamespace([module, bundle, 'controller']) \
+				.setOutput(destPath) \
+				.setConfig(self.buildConfig) \
+				.setTemplate(template) \
+				.compile()
 		# Get all variables in actions
 		self.viewData   = compiler.viewData
 		self.listInclude = compiler.includeAll
@@ -92,27 +93,31 @@ class App:
 		if not path.isdir(destPath):
 			makedirs(destPath)
 		compiler = Compiler('command')
-		compiler  .setInput(targetPath) \
-				  .setNamespace([module, bundle, 'command']) \
-				  .setOutput(destPath) \
-				  .setConfig(self.buildConfig) \
-				  .compile()
+		compiler.setSpace('        ') \
+				.setInput(targetPath) \
+				.setNamespace([module, bundle, 'command']) \
+				.setOutput(destPath) \
+				.setConfig(self.buildConfig) \
+				.compile()
 		for cmdFile in compiler.getListFile():
 			commandClass = '::'.join([module, bundle, 'command', cmdFile]).split('.cpp')[0]
 			self.listCommand.append(commandClass)
 
 	def compileProvider(self, root, module, bundle):
-		# Compile entity model	
+		print '      provider'
+		print '         entity'
+		# Compile entity model
 		targetPath = path.join(root, module, bundle, 'provider', 'entity')
 		destPath = path.join(self.container, module, bundle, 'provider', 'entity')
 		if not path.isdir(destPath):
 			makedirs(destPath)
 		compiler = Compiler('model')
-		compiler  .setInput(targetPath) \
-				  .setNamespace([module, bundle, 'entity']) \
-				  .setOutput(destPath) \
-				  .setConfig(self.buildConfig) \
-				  .compile()
+		compiler.setSpace('            ') \
+				.setInput(targetPath) \
+				.setNamespace([module, bundle, 'entity']) \
+				.setOutput(destPath) \
+				.setConfig(self.buildConfig) \
+				.compile()
 
 	def compileResource(self, root, module, bundle):
 		return
