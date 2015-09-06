@@ -43,7 +43,7 @@ class Build(argparse.Action):
 	def build(self):
 		system("cd .. && make object && make cli")
 		system('chmod +x ./config.sh && ./config.sh')
-		system('chmod +x ./build.sh  && ./build.sh')
+		#system('chmod +x ./build.sh  && ./build.sh')
 
 	def __call__(self, parser, args, values, option_string = None):
 		self.root = getcwd()
