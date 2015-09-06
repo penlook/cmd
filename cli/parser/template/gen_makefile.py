@@ -26,22 +26,23 @@
 #     Loi Nguyen       <loint@penlook.com>
 
 gen_makefile = """
-GCC		= gcc
-G++     = g++
-CCVER 	= c++14
-BUILD   = -std=$(CCVER) -Wall -O3
-DEBUG   = -std=$(CCVER) -pipe -g0 -fno-inline -Wall -pthread
-TESTF	= -std=$(CCVER) -g -L/opt/gtest/lib -lgtest -lgtest_main -lpthread -I/opt/gtest/include
-INCLUDE = /usr/lib/pen
-OBJECTD = object
-SOURCE  = $(shell find container excutable -name *.cpp)
-OBJECT  = $(addprefix $(OBJECTD)/, $(patsubst %.cpp, %.o, $(SOURCE)))
-FLAGS   = $(BUILD)
+GCC		  = gcc
+G++       = g++
+CCVER     = c++14
+BUILD     = -std=$(CCVER) -Wall -O3
+DEBUG     = -std=$(CCVER) -pipe -g0 -fno-inline -Wall -pthread
+TESTF	  = -std=$(CCVER) -g -L/opt/gtest/lib -lgtest -lgtest_main -lpthread -I/opt/gtest/include
+INCLUDE   = /usr/lib/pen
+OBJECTD   = object
+SOURCE    = $(shell find container excutable -name *.cpp)
+OBJECTS   = $(shell find object/container -name *.o)
+OBJECTCLI = $(shell find object/excutable/cli -name *.o)
+OBJECT    = $(addprefix $(OBJECTD)/, $(patsubst %.cpp, %.o, $(SOURCE)))
+FLAGS     = $(BUILD)
 
 all: object
 
 object: $(OBJECT)
-    
 
 $(OBJECTD)/%.o: %.cpp
 	$(G++) -c $(FLAGS) -I./container -I$(INCLUDE) -lpen $< -o $@ 2>&1
@@ -50,13 +51,10 @@ $(OBJECT): mk_object
 
 mk_object:
 	for file in $(OBJECT) ; do if [ ! -f $$file ]; then mkdir -p $$file && rm -rf $$file; fi done
-	make cli
 
 cli:
 	mkdir -p ../bin
-	echo $(shell find object/container -name *.o)
-	#$(eval OBJECTCLI = $(shell find object/excutable/cli -name *.o))
-	$(G++) -I./container -I$(INCLUDE) -lpen -o ../bin/app-cli
+	$(G++) $(OBJECTS) $(OBJECTCLI) -I./container -I$(INCLUDE) -lpen -o ../bin/app-cli
 
 install:
 	cp -rf $(BINARY_CLI) /usr/bin/$(BINARY_CLI)

@@ -41,7 +41,7 @@ class Build(argparse.Action):
 		system("pkill pendev && service nginx stop")
 
 	def build(self):
-		system("cd .. && make")
+		system("cd .. && make object && make cli")
 		system('chmod +x ./config.sh && ./config.sh')
 		system('chmod +x ./build.sh  && ./build.sh')
 
